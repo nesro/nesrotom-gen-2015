@@ -5,7 +5,7 @@ typedef enum {
    EQ, NEQ, LT, GT, LTE, GTE, LPAR, RPAR, ASSGN,
    COMMA, SEMICOLON,
    kwVAR, kwCONST, kwBEGIN, kwEND, kwIF, kwTHEN, kwELSE, 
-   kwWHILE, kwDO, kwWRITE, 
+   kwWHILE, kwDO, kwWRITE, kwREAD,
    EOI
 } LexSymbol;
 

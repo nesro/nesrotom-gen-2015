@@ -1,0 +1,25 @@
+var a;
+var b;
+var c;
+var d;
+
+begin
+	read a;
+	read b;
+	read c;
+	read d;
+
+	while (a + b + c) < d do
+	begin
+		a := b;
+		b := c;
+		c := d;
+		d := d - 1;
+	end;
+
+	write a;
+	write b;
+	write c;
+	write d;
+end;
+

@@ -1,5 +1,6 @@
 /* parser.cpp */
 
+#include "debug.h"
 #include "strom.h"
 #include "parser.h"
 #include "lexan.h"
@@ -20,264 +21,378 @@ Statm *CastElse();
 Expr *Podminka();
 Operator RelOp();
 Expr *Vyraz();
-Expr *ZbVyrazu(Expr*);
+Expr *ZbVyrazu(Expr *);
 Expr *Term();
-Expr *ZbTermu(Expr*);
+Expr *ZbTermu(Expr *);
 Expr *Faktor();
 
-void Srovnani(LexSymbol s)
-{
-   if (Symb == s)
-      CtiSymb();
-   else
-      ChybaSrovnani(s);
+void Srovnani(LexSymbol s) {
+	_fn()
+	;
+
+	if (Symb == s) {
+		CtiSymb();
+	} else {
+		ChybaSrovnani(s);
+	}
+
+	_return_void
+	;
 }
 
-void Srovnani_IDENT(char *id)
-{
-   if (Symb == IDENT) {
-      strcpy(id, Ident);
-      CtiSymb();
-   } else
-      ChybaSrovnani(IDENT);
+void Srovnani_IDENT(char *id) {
+	_fn()
+	;
+
+	if (Symb == IDENT) {
+		strcpy(id, Ident);
+		CtiSymb();
+	} else {
+		ChybaSrovnani(IDENT);
+	}
+
+	_return_void
+	;
 }
 
-void Srovnani_NUMB(int *h)
-{
-   if (Symb == NUMB) {
-      *h = Cislo;
-      CtiSymb();
-   } else 
-      ChybaSrovnani(NUMB);
+void Srovnani_NUMB(int *h) {
+	_fn()
+	;
+
+	if (Symb == NUMB) {
+		*h = Cislo;
+		CtiSymb();
+	} else {
+		ChybaSrovnani(NUMB);
+	}
+
+	_return_void
+	;
 }
 
-Prog *Program()
-{
-   Dekl();
-   return new Prog(SlozPrikaz());
+Prog *Program() {
+	_fn()
+	;
+	Dekl();
+	_return(new Prog(SlozPrikaz()));
 }
 
-void Dekl()
-{
-   switch (Symb) {
-   case kwVAR:
-      DeklProm();
-      Dekl();
-      break;
-   case kwCONST:
-      DeklKonst();
-      Dekl();
-      break;
-   default:
-      ;
-   }
+void Dekl() {
+	_fn()
+	;
+
+	switch (Symb) {
+	case kwVAR:
+		DeklProm();
+		Dekl();
+		break;
+	case kwCONST:
+		DeklKonst();
+		Dekl();
+		break;
+	default:
+		;
+	}
+
+	_return_void
+	;
 }
 
-void DeklKonst()
-{
-   char id[MaxLenIdent];
-   int hod;
-   CtiSymb();
-   Srovnani_IDENT(id);
-   Srovnani(EQ);
-   Srovnani_NUMB(&hod);
-   deklKonst(id, hod);
-   ZbDeklKonst();
-   Srovnani(SEMICOLON);
+void DeklKonst() {
+	_fn()
+	;
+	char id[MaxLenIdent];
+	int hod;
+	CtiSymb();
+	Srovnani_IDENT(id);
+	Srovnani(EQ);
+	Srovnani_NUMB(&hod);
+	deklKonst(id, hod);
+	ZbDeklKonst();
+	Srovnani(SEMICOLON);
+	_return_void
+	;
 }
 
-void ZbDeklKonst()
-{
-   if (Symb == COMMA) {
-      char id[MaxLenIdent];
-      int hod;
-      CtiSymb();
-      Srovnani_IDENT(id);
-      Srovnani(EQ);
-      Srovnani_NUMB(&hod);
-      deklKonst(id, hod);
-      ZbDeklKonst();
-   }
-}
-   
-void DeklProm()
-{
-   char id[MaxLenIdent];
-   CtiSymb();
-   Srovnani_IDENT(id);
-   deklProm(id);
-   ZbDeklProm();
-   Srovnani(SEMICOLON);
+void ZbDeklKonst() {
+	_fn()
+	;
+
+	if (Symb == COMMA) {
+		char id[MaxLenIdent];
+		int hod;
+		CtiSymb();
+		Srovnani_IDENT(id);
+		Srovnani(EQ);
+		Srovnani_NUMB(&hod);
+		deklKonst(id, hod);
+		ZbDeklKonst();
+	}
+
+	_return_void
+	;
 }
 
-void ZbDeklProm()
-{
-   if (Symb == COMMA) {
-      char id[MaxLenIdent];
-      CtiSymb();
-      Srovnani_IDENT(id);
-      deklProm(id);
-      ZbDeklProm();
-   }
+void DeklProm() {
+	_fn()
+	;
+	char id[MaxLenIdent];
+	CtiSymb();
+	Srovnani_IDENT(id);
+	deklProm(id);
+	ZbDeklProm();
+	Srovnani(SEMICOLON);
+	_return_void
+	;
 }
 
-StatmList *SlozPrikaz()
-{
-   Srovnani(kwBEGIN);
-   Statm *p = Prikaz();
-   StatmList *su = new StatmList(p, ZbPrikazu());
-   Srovnani(kwEND);
-   return su;
+void ZbDeklProm() {
+	_fn()
+	;
+
+	if (Symb == COMMA) {
+		char id[MaxLenIdent];
+		CtiSymb();
+		Srovnani_IDENT(id);
+		deklProm(id);
+		ZbDeklProm();
+	}
+
+	_return_void
+	;
 }
 
-StatmList *ZbPrikazu()
-{
-   if (Symb == SEMICOLON) {
-      CtiSymb();
-      Statm *p = Prikaz();
-      return new StatmList(p, ZbPrikazu());
-   }
-   return 0;
+StatmList *SlozPrikaz() {
+	_fn()
+	;
+	Srovnani(kwBEGIN);
+	Statm *p = Prikaz();
+	StatmList *su = new StatmList(p, ZbPrikazu());
+	Srovnani(kwEND);
+	_return(su);
 }
 
-Statm *Prikaz()
-{
-   switch (Symb) {
-   case IDENT: {
-      Var *var = new Var(adrProm(Ident),false);
-      CtiSymb();
-      Srovnani(ASSGN);
-      return new Assign(var, Vyraz());
-   }
-   case kwWRITE:
-      CtiSymb();
-      return new Write(Vyraz());
-   case kwIF: {
-      CtiSymb();
-      Expr *cond = Podminka();
-      Srovnani(kwTHEN);
-      Statm *prikaz = Prikaz();
-      return new If(cond, prikaz, CastElse());
-   }
-   case kwWHILE: {
-      Expr *cond;
-      CtiSymb();
-      cond = Podminka();
-      Srovnani(kwDO);
-      return new While(cond, Prikaz());
-   }
-   case kwBEGIN:
-      return SlozPrikaz();
-   default:
-      return new Empty;
-   }
+StatmList *ZbPrikazu() {
+	_fn()
+	;
+
+	if (Symb == SEMICOLON) {
+		CtiSymb();
+		Statm *p = Prikaz();
+		_return(new StatmList(p, ZbPrikazu()));
+	}
+
+	_return(0);
 }
 
-Statm *CastElse()
-{
-   if (Symb == kwELSE) {
-      CtiSymb();
-      return Prikaz();
-   }
-   return 0;
+Statm *Prikaz() {
+	_fn()
+	;
+
+	switch (Symb) {
+	case IDENT: {
+		Var *var = new Var(adrProm(Ident), false);
+		CtiSymb();
+		Srovnani(ASSGN);
+		_return(new Assign(var, Vyraz()));
+		break;
+	}
+
+	case kwWRITE:
+		CtiSymb();
+		_return(new Write(Vyraz()))
+		;
+		break;
+
+	case kwREAD:
+		CtiSymb();
+		_return(new Read(Vyraz()))
+		;
+		break;
+
+	case kwIF: {
+		CtiSymb();
+		Expr *cond = Podminka();
+		Srovnani(kwTHEN);
+		Statm *prikaz = Prikaz();
+		_return(new If(cond, prikaz, CastElse()));
+		break;
+
+	}
+
+	case kwWHILE: {
+		Expr *cond;
+		CtiSymb();
+		cond = Podminka();
+		Srovnani(kwDO);
+		_return(new While(cond, Prikaz()));
+	}
+
+	case kwBEGIN:
+		_return(SlozPrikaz())
+		;
+
+	default:
+		_return(new Empty)
+		;
+	}
 }
 
-Expr *Podminka()
-{
-   Expr *left = Vyraz();
-   Operator op = RelOp();
-   Expr *right = Vyraz();
-   return new Bop(op, left, right);
+Statm *CastElse() {
+	_fn()
+	;
+
+	if (Symb == kwELSE) {
+		CtiSymb();
+		_return(Prikaz());
+	}
+
+	_return(0);
 }
 
-Operator RelOp()
-{
-   switch (Symb) {
-   case EQ:
-      CtiSymb();
-      return Eq;
-   case NEQ:
-      CtiSymb();
-      return NotEq;
-   case LT:
-      CtiSymb();
-      return Less;
-   case GT:
-      CtiSymb();
-      return Greater;
-   case LTE:
-      CtiSymb();
-      return LessOrEq;
-   case GTE:
-      CtiSymb();
-      return GreaterOrEq;
-   default:
-      Chyba("neocekavany symbol");
-      return Error;
-   }
+Expr *Podminka() {
+	_fn()
+	;
+	Expr *left = Vyraz();
+	Operator op = RelOp();
+	Expr *right = Vyraz();
+	_return(new Bop(op, left, right));
 }
 
-Expr *Vyraz()
-{
-   if (Symb == MINUS) {
-      CtiSymb();
-      return ZbVyrazu(new UnMinus(Term()));
-   }
-   return ZbVyrazu(Term());
+Operator RelOp() {
+	_fn()
+	;
+
+	switch (Symb) {
+	case EQ:
+		CtiSymb();
+		_return(Eq)
+		;
+
+	case NEQ:
+		CtiSymb();
+		_return(NotEq)
+		;
+
+	case LT:
+		CtiSymb();
+		_return(Less)
+		;
+
+	case GT:
+		CtiSymb();
+		_return(Greater)
+		;
+
+	case LTE:
+		CtiSymb();
+		_return(LessOrEq)
+		;
+
+	case GTE:
+		CtiSymb();
+		_return(GreaterOrEq)
+		;
+
+	default:
+		Chyba("neocekavany symbol");
+		_return(Error)
+		;
+	}
 }
 
-Expr *ZbVyrazu(Expr *du)
-{
-   switch (Symb) {
-   case PLUS:
-      CtiSymb();
-      return ZbVyrazu(new Bop(Plus, du, Term()));
-   case MINUS:
-      CtiSymb();
-      return ZbVyrazu(new Bop(Minus, du, Term()));
-   default:
-      return du;
-   }
+Expr *Vyraz() {
+	_fn()
+	;
+
+	if (Symb == MINUS) {
+		CtiSymb();
+		_return(ZbVyrazu(new UnMinus(Term())));
+	}
+
+	_return(ZbVyrazu(Term()));
 }
 
-Expr *Term()
-{
-   return ZbTermu(Faktor());
+Expr *ZbVyrazu(Expr *du) {
+	_fn()
+	;
+
+	switch (Symb) {
+	case PLUS:
+		CtiSymb();
+		_return(ZbVyrazu(new Bop(Plus, du, Term())))
+		;
+
+	case MINUS:
+		CtiSymb();
+		_return(ZbVyrazu(new Bop(Minus, du, Term())))
+		;
+
+	default:
+		_return(du)
+		;
+	}
 }
 
-Expr *ZbTermu(Expr *du)
-{
-   switch (Symb) {
-   case TIMES:
-      CtiSymb();
-      return ZbTermu(new Bop(Times, du, Faktor()));
-   case DIVIDE:
-      CtiSymb();
-      return ZbTermu(new Bop(Divide, du, Faktor()));
-   default:
-      return du;
-   }
+Expr *Term() {
+	_fn()
+	;
+	_return(ZbTermu(Faktor()));
 }
 
-Expr *Faktor()
-{
-   switch (Symb) {
-   case IDENT:
-      char id[MaxLenIdent];
-      Srovnani_IDENT(id);
-      return VarOrConst(id);
-   case NUMB:
-      int hodn;
-      Srovnani_NUMB(&hodn);
-      return new Numb(hodn);
-   case LPAR: {
-      CtiSymb();
-      Expr *su = Vyraz();
-      Srovnani(RPAR);
-      return su;
-   }
-   default:
-      Chyba("neocekavany symbol");
-      return 0;
-   }
+Expr *ZbTermu(Expr *du) {
+	_fn()
+	;
+
+	switch (Symb) {
+	case TIMES:
+		CtiSymb();
+		_return(ZbTermu(new Bop(Times, du, Faktor())))
+		;
+		break;
+
+	case DIVIDE:
+		CtiSymb();
+		_return(ZbTermu(new Bop(Divide, du, Faktor())))
+		;
+		break;
+
+	default:
+		_return(du)
+		;
+	}
+}
+
+Expr *Faktor() {
+	_fn()
+	;
+
+	switch (Symb) {
+	case IDENT:
+		char id[MaxLenIdent];
+		Srovnani_IDENT(id);
+		_return(VarOrConst(id))
+		;
+		break;
+
+	case NUMB:
+		int hodn;
+		Srovnani_NUMB(&hodn);
+		_return(new Numb(hodn))
+		;
+		break;
+
+	case LPAR: {
+		CtiSymb();
+		Expr *su = Vyraz();
+		Srovnani(RPAR);
+		_return(su);
+		break;
+	}
+
+	default:
+		Chyba("neocekavany symbol");
+		_return(0)
+		;
+	}
 }

@@ -1,283 +1,521 @@
 /* strom.cpp */
 
+#include <vector>
+
+#include "debug.h"
 #include "strom.h"
 #include "tabsym.h"
 
-// konstruktory a destruktory
+#include "code.h"
 
-Var::Var(int a, bool rv)
-{ addr = a; rvalue = rv; }
+/******************************************************************************/
 
-Numb::Numb(int v)
-{ value = v; }
+/******************************************************************************/
 
-int Numb::Value()
-{ return value; }
-
-Bop::Bop(Operator o, Expr *l, Expr *r)
-{ op = o; left = l; right = r; }
-
-Bop::~Bop()
-{ delete left; delete right; }
-
-UnMinus::UnMinus(Expr *e)
-{ expr = e; }
-
-UnMinus::~UnMinus()
-{ delete expr; }
-
-Assign::Assign(Var *v, Expr *e)
-{ var = v; expr = e; }
-
-Assign::~Assign()
-{ delete var; delete expr; }
-
-Write::Write(Expr *e)
-{ expr = e; }
-
-Write::~Write()
-{ delete expr; }
-
-If::If(Expr *c, Statm *ts, Statm *es)
-{ cond = c; thenstm = ts; elsestm = es; }
-
-If::~If()
-{
-   delete cond;
-   if (thenstm)
-      delete thenstm;
-   if (elsestm)
-      delete elsestm;
+Var::Var(int a, bool rv) {
+	_fn();
+	addr = a;
+	rvalue = rv;
+	_return_void;
 }
 
-While::While(Expr *c, Statm *b)
-{ cond = c; body = b; }
-
-While::~While()
-{ delete body; }
-
-StatmList::StatmList(Statm *s, StatmList *n)
-{ statm = s; next = n; }
-
-StatmList::~StatmList()
-{ delete statm; delete next; }
-
-Prog::Prog(StatmList *s)
-{ stm = s; }
-
-Prog::~Prog()
-{ delete stm; } 
-
-// definice metody Optimize
-
-Node *Bop::Optimize() 
-{
-   left = (Expr*)(left->Optimize());
-   right = (Expr*)(right->Optimize());
-   Numb *l = dynamic_cast<Numb*>(left);
-   Numb *r = dynamic_cast<Numb*>(right);
-   if (!l || !r) return this;
-   int res;
-   int leftval = l->Value();
-   int rightval = r->Value();
-   switch (op) {
-   case Plus:
-      res = leftval + rightval;
-      break;
-   case Minus:
-      res = leftval - rightval;
-      break;
-   case Times:
-      res = leftval * rightval;
-      break;
-   case Divide:
-      res = leftval / rightval;
-      break;
-   case Eq:
-      res = leftval == rightval;
-      break;
-   case NotEq:
-      res = leftval != rightval;
-      break;
-   case Less:
-      res = leftval < rightval;
-      break;
-   case Greater:
-      res = leftval > rightval;
-      break;
-   case LessOrEq:
-      res = leftval <= rightval;
-      break;
-   case GreaterOrEq:
-      res = leftval >= rightval;
-      break;
-   case Error://nenastane
-      break;
-   }
-   delete this;
-   return new Numb(res);
+Numb::Numb(int v) {
+	_fn();
+	value = v;
+	_return_void;
 }
 
-Node *UnMinus::Optimize()
-{
-   expr = (Expr*)expr->Optimize();
-   Numb *e = dynamic_cast<Numb*>(expr);
-   if (!e) return this;
-   e = new Numb(-e->Value());
-   delete this;
-   return e;
+int Numb::Value() {
+	_fn();
+	_return(value);
 }
 
-Node *Assign::Optimize()
-{
-   expr = (Var*)(expr->Optimize());
-   return this;
+Bop::Bop(Operator o, Expr *l, Expr *r) {
+	_fn();
+	op = o;
+	left = l;
+	right = r;
+	_return_void;
 }
 
-Node *Write::Optimize()
-{
-   expr = (Expr*)(expr->Optimize());
-   return this;
+Bop::~Bop() {
+	_fn();
+	delete left;
+	delete right;
+	_return_void;
 }
 
-Node *If::Optimize()
-{
-   cond = (Expr*)(cond->Optimize());
-   thenstm = (Statm*)(thenstm->Optimize());
-   if (elsestm)
-      elsestm = (Statm*)(elsestm->Optimize());
-   Numb *c = dynamic_cast<Numb*>(cond);
-   if (!c) return this;
-   Node *res;
-   if (c->Value()) {
-      res = thenstm; thenstm = 0;
-   } else {
-      res = elsestm; elsestm = 0;
-   }
-   delete this;
-   return res;
+UnMinus::UnMinus(Expr *e) {
+	_fn();
+	expr = e;
+	_return_void;
 }
 
-Node *While::Optimize()
-{
-   cond = (Expr*)(cond->Optimize());
-   body = (Statm*)(body->Optimize());
-   Numb *c = dynamic_cast<Numb*>(cond);
-   if (!c) return this;
-   if (!c->Value()) {
-      delete this;
-      return new Empty;
-   }
-   return this;
+UnMinus::~UnMinus() {
+	_fn();
+	delete expr;
+	_return_void;
 }
 
-Node *StatmList::Optimize()
-{
-   StatmList *s = this;
-   do {
-      s->statm = (Statm*)(s->statm->Optimize());
-      s = s->next;
-   }
-   while (s);
-   return this;
+Assign::Assign(Var *v, Expr *e) {
+	_fn();
+	var = v;
+	expr = e;
+	_return_void;
 }
 
-Node *Prog::Optimize()
-{
-   stm = (StatmList*)(stm->Optimize());
-   return this;
+Assign::~Assign() {
+	_fn();
+	delete var;
+	delete expr;
+	_return_void;
 }
 
-// definice metody Translate
-
-void Var::Translate()
-{
-   Gener(TA, addr);
-   if (rvalue)
-      Gener(DR);
+Write::Write(Expr *e) {
+	_fn();
+	expr = e;
+	_return_void;
 }
 
-void Numb::Translate()
-{
-   Gener(TC, value);
+Write::~Write() {
+	_fn();
+	delete expr;
+	_return_void;
 }
 
-void Bop::Translate()
-{
-   left->Translate();
-   right->Translate();
-   Gener(BOP, op);
+Read::Read(Expr *e) {
+	_fn();
+	expr = e;
+	_return_void;
 }
 
-void UnMinus::Translate()
-{
-   expr->Translate();
-   Gener(UNM);
+Read::~Read() {
+	_fn();
+	delete expr;
+	_return_void;
 }
 
-void Assign::Translate()
-{
-   var->Translate();
-   expr->Translate();
-   Gener(ST);
+If::If(Expr *c, Statm *ts, Statm *es) {
+	_fn();
+	cond = c;
+	thenstm = ts;
+	elsestm = es;
+	_return_void;
 }
 
-void Write::Translate()
-{
-   expr->Translate();
-   Gener(WRT);
+If::~If() {
+	_fn();
+	delete cond;
+
+	if (thenstm) {
+		delete thenstm;
+	}
+
+	if (elsestm) {
+		delete elsestm;
+	}
+
+	_return_void;
 }
 
-void If::Translate()
-{
-   cond->Translate();
-   int a1 = Gener(IFJ);
-   thenstm->Translate();
-   if (elsestm) {
-      int a2 = Gener(JU);
-      PutIC(a1);
-      elsestm->Translate();
-      PutIC(a2);
-   } else 
-      PutIC(a1);
+While::While(Expr *c, Statm *b) {
+	_fn();
+	cond = c;
+	body = b;
+	_return_void;
 }
 
-void While::Translate()
-{
-   int a1 = GetIC();
-   cond->Translate();
-   int a2 = Gener(IFJ);
-   body->Translate();
-   Gener(JU, a1);
-   PutIC(a2);
+While::~While() {
+	_fn();
+	delete body;
+	_return_void;
 }
 
-void StatmList::Translate()
-{
-   StatmList *s = this;
-   do {
-      s->statm->Translate();
-      s = s->next;
-   } while (s);
+StatmList::StatmList(Statm *s, StatmList *n) {
+	_fn();
+	statm = s;
+	next = n;
+	_return_void;
 }
 
-void Prog::Translate()
-{
-   stm->Translate();
-   Gener(STOP);
+StatmList::~StatmList() {
+	_fn();
+	delete statm;
+	delete next;
+	_return_void;
 }
 
-Expr *VarOrConst(char *id)
-{
-   int v;
-   DruhId druh = idPromKonst(id,&v);
-   switch (druh) {
-   case IdProm:
-      return new Var(v, true);
-   case IdKonst:
-      return new Numb(v);
-   case Nedef:
-   default:
-      return 0;
-   }
+Prog::Prog(StatmList *s) {
+	_fn();
+	stm = s;
+	_return_void;
+}
+
+Prog::~Prog() {
+	_fn();
+	delete stm;
+	_return_void;
+}
+
+/****************************************************************** OPTIMIZE */
+
+Node *Bop::Optimize() {
+	_fn();
+	left = (Expr *) (left->Optimize());
+	right = (Expr *) (right->Optimize());
+	Numb *l = dynamic_cast<Numb *>(left);
+	Numb *r = dynamic_cast<Numb *>(right);
+
+	if (!l || !r) {
+		return this;
+	}
+
+	int res;
+	int leftval = l->Value();
+	int rightval = r->Value();
+
+	switch (op) {
+	case Plus:
+		res = leftval + rightval;
+		break;
+
+	case Minus:
+		res = leftval - rightval;
+		break;
+
+	case Times:
+		res = leftval * rightval;
+		break;
+
+	case Divide:
+		res = leftval / rightval;
+		break;
+
+	case Eq:
+		res = leftval == rightval;
+		break;
+
+	case NotEq:
+		res = leftval != rightval;
+		break;
+
+	case Less:
+		res = leftval < rightval;
+		break;
+
+	case Greater:
+		res = leftval > rightval;
+		break;
+
+	case LessOrEq:
+		res = leftval <= rightval;
+		break;
+
+	case GreaterOrEq:
+		res = leftval >= rightval;
+		break;
+
+	case Error: //nenastane
+		res = 0;
+		assert(0);
+		break;
+	}
+
+	delete this;
+	_return(new Numb(res));
+}
+
+Node *UnMinus::Optimize() {
+	_fn();
+	expr = (Expr *) expr->Optimize();
+	Numb *e = dynamic_cast<Numb *>(expr);
+
+	if (!e) {
+		_return(this);
+	}
+
+	e = new Numb(-e->Value());
+	delete this;
+	_return(e);
+}
+
+Node *Assign::Optimize() {
+	_fn();
+	expr = (Var *) (expr->Optimize());
+	_return(this);
+}
+
+Node *Write::Optimize() {
+	_fn();
+	expr = (Expr *) (expr->Optimize());
+	_return(this);
+}
+
+Node *Read::Optimize() {
+	_fn();
+	expr = (Expr *) (expr->Optimize());
+	_return(this);
+}
+
+Node *If::Optimize() {
+	_fn();
+	cond = (Expr *) (cond->Optimize());
+	thenstm = (Statm *) (thenstm->Optimize());
+
+	if (elsestm) {
+		elsestm = (Statm *) (elsestm->Optimize());
+	}
+
+	Numb *c = dynamic_cast<Numb *>(cond);
+
+	if (!c) {
+		_return(this);
+	}
+
+	Node *res;
+
+	if (c->Value()) {
+		res = thenstm;
+		thenstm = 0;
+	} else {
+		res = elsestm;
+		elsestm = 0;
+	}
+
+	delete this;
+	_return(res);
+}
+
+Node *While::Optimize() {
+	_fn();
+	cond = (Expr *) (cond->Optimize());
+	body = (Statm *) (body->Optimize());
+	Numb *c = dynamic_cast<Numb *>(cond);
+
+	if (!c) {
+		_return(this);
+	}
+
+	if (!c->Value()) {
+		delete this;
+		_return(new Empty);
+	}
+
+	_return(this);
+}
+
+Node *StatmList::Optimize() {
+	_fn();
+	StatmList *s = this;
+
+	do {
+		s->statm = (Statm *) (s->statm->Optimize());
+		s = s->next;
+	} while (s);
+
+	_return(this);
+}
+
+Node *Prog::Optimize() {
+	_fn();
+	stm = (StatmList *) (stm->Optimize());
+	_return(this);
+}
+
+/***************************************************************** TRANSLATE */
+
+void Var::Translate() {
+	_fn();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(TA, addr);
+#endif
+
+	if (rvalue) {
+#if _DO_YOU_WANT_ZASPOC_
+		Gener(DR);
+#endif
+	}
+
+	_return_void;
+}
+
+void Numb::Translate() {
+	_fn();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(TC, value);
+#endif
+
+	_return_void;
+}
+
+void Bop::Translate() {
+	_fn();
+	left->Translate();
+	right->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(BOP, op);
+#endif
+
+	_return_void;
+}
+
+void UnMinus::Translate() {
+	_fn();
+	expr->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(UNM);
+#endif
+
+	_return_void;
+}
+
+void Assign::Translate() {
+	_fn();
+	var->Translate();
+	expr->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(ST);
+#endif
+
+	_return_void;
+}
+
+void Write::Translate() {
+	_fn();
+	expr->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(WRT);
+#endif
+
+	_return_void;
+}
+
+void Read::Translate() {
+	_fn();
+	expr->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(READ, ((Var *) this->expr)->addr);
+#endif
+
+	_return_void;
+}
+
+void If::Translate() {
+	_fn();
+
+	int a1 = 0;
+	int a2 = 0;
+
+	a1 = a2;
+	a2 = a1;
+
+	cond->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	a1 = Gener(IFJ);
+#endif
+
+	thenstm->Translate();
+
+	if (elsestm) {
+
+#if _DO_YOU_WANT_ZASPOC_
+		a2 = Gener(JU);
+		PutIC(a1);
+#endif
+
+		elsestm->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+		PutIC(a2);
+#endif
+	} else {
+#if _DO_YOU_WANT_ZASPOC_
+		PutIC(a1);
+#endif
+	}
+
+	_return_void;
+}
+
+void While::Translate() {
+	_fn();
+	int a1 = 0;
+	int a2 = 0;
+
+	a1 = a2;
+	a2 = a1;
+
+	cond->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	GetIC();
+	a2 = Gener(IFJ);
+#endif
+
+	body->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(JU, a1);
+	PutIC(a2);
+#endif
+
+	_return_void;
+}
+
+void StatmList::Translate() {
+	_fn();
+	StatmList *s = this;
+
+	do {
+		s->statm->Translate();
+		s = s->next;
+	} while (s);
+
+	_return_void;
+}
+
+void Prog::Translate() {
+	_fn();
+
+	//source_vector.add(new CodeLine(ld, 6, 0, 0));
+
+	//LD  6,0(0)
+	//  1:     ST  0,0(0)
+
+	stm->Translate();
+
+#if _DO_YOU_WANT_ZASPOC_
+	Gener(STOP);
+#endif
+
+	_return_void;
+}
+
+Expr *VarOrConst(char *id) {
+	_fn();
+	int v;
+	DruhId druh = idPromKonst(id, &v);
+
+	switch (druh) {
+	case IdProm:
+		_return(new Var(v, true))
+;		break;
+
+		case IdKonst:
+		_return(new Numb(v));
+		break;
+
+		case Nedef:
+		default:
+		_return(0);
+		break;
+	}
 }

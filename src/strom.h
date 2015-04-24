@@ -19,25 +19,25 @@ class Statm : public Node {
 };
 
 class Var : public Expr {
+public:
    int addr;
    bool rvalue;
-public:
    Var(int, bool);
    virtual void Translate();
 };
 
 class Numb : public Expr {
-   int value;
 public:
+   int value;
    Numb(int);
    virtual void Translate();
    int Value();
 };
 
 class Bop : public Expr {
+public:
    Operator op;
    Expr *left, *right;
-public:
    Bop(Operator, Expr*, Expr*);
    virtual ~Bop();
    virtual Node *Optimize();
@@ -45,8 +45,8 @@ public:
 };
 
 class UnMinus : public Expr {
-   Expr *expr;
 public:
+   Expr *expr;
    UnMinus(Expr *e);
    virtual ~UnMinus();
    virtual Node *Optimize();
@@ -54,9 +54,9 @@ public:
 };
 
 class Assign : public Statm {
+public:
    Var *var;
    Expr *expr;
-public:
    Assign(Var*, Expr*);
    virtual ~Assign();
    virtual Node *Optimize();
@@ -64,19 +64,28 @@ public:
 };
 
 class Write : public Statm {
-   Expr *expr;
 public:
+   Expr *expr;
    Write(Expr*);
    virtual ~Write();
    virtual Node *Optimize();
    virtual void Translate();
 };
 
+class Read : public Statm {
+public:
+   Expr *expr;
+   Read(Expr*);
+   virtual ~Read();
+   virtual Node *Optimize();
+   virtual void Translate();
+};
+
 class  If : public Statm {
+public:
    Expr *cond;
    Statm *thenstm;
    Statm *elsestm;
-public:
    If(Expr*, Statm*, Statm*);
    virtual ~If();
    virtual Node *Optimize();
@@ -84,9 +93,9 @@ public:
 };
 
 class While : public Statm {
+public:
    Expr *cond;
    Statm *body;
-public:
    While(Expr*, Statm*);
    virtual ~While();
    virtual Node *Optimize();
@@ -94,9 +103,9 @@ public:
 };
 
 class  StatmList : public Statm {
+public:
    Statm *statm;
    StatmList *next;
-public:
    StatmList(Statm*, StatmList*);
    virtual ~StatmList();
    virtual Node *Optimize();
@@ -108,8 +117,8 @@ class Empty : public Statm {
 };
 
 class Prog : public Node {
-   StatmList *stm;
 public:
+   StatmList *stm;
    Prog(StatmList*);
    virtual ~Prog();
    virtual Node *Optimize();

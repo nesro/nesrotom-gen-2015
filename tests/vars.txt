@@ -1,0 +1,29 @@
+var a;
+var b;
+var c;
+var d;
+var e;
+var f;
+var g;
+var h;
+
+begin
+	a := 1;
+	b := 2;
+	c := 3;
+	d := 4;
+	e := 5;
+	f := 6;
+	g := 7;
+	h := 8;
+
+	write a;
+	write b;
+	write c;
+	write d;
+	write e;
+	write f;
+	write g;
+	write h;
+end;
+

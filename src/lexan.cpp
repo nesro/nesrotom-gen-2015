@@ -1,5 +1,6 @@
 /* lexan.cpp */
 
+#include "debug.h"
 #include "lexan.h"
 #include "vstup.h"
 #include <stdlib.h>
@@ -14,7 +15,7 @@ static int Znak;   // vstupni znak
 static char Vstup; // vstupni symbol
 
 void CtiVstup(void)
-{
+{ _fn();
    Znak = CtiZnak();
    if ((Znak>='A' && Znak<='Z') || (Znak>='a' && Znak<='z'))
       Vstup = 'p';
@@ -26,9 +27,14 @@ void CtiVstup(void)
       Vstup = 'm';
    else
       Vstup = Znak;
+
+   _return_void;
 }
 
-const struct {const char* slovo; LexSymbol symb;} TabKS[] = {
+const struct {
+	const char *slovo;
+	LexSymbol symb;
+} TabKS[] = {
    {"var", kwVAR},
    {"const", kwCONST},
    {"begin", kwBEGIN},
@@ -39,22 +45,24 @@ const struct {const char* slovo; LexSymbol symb;} TabKS[] = {
    {"while", kwWHILE},
    {"do", kwDO},
    {"write", kwWRITE},
+   {"read", kwREAD},
    {NULL, EOI}
 };
 
 LexSymbol KlicoveSlovo(char* id)
-{
+{ _fn();
    int i = 0;
    while (TabKS[i].slovo) 
-      if (strcmp(id, TabKS[i].slovo)==0) 
-         return TabKS[i].symb;
-      else
+      if (strcmp(id, TabKS[i].slovo)==0) {
+         _return (TabKS[i].symb);
+      } else {
          i++;
-   return IDENT;
+      }
+   _return (IDENT);
 }
 
 void Chyba(const char* text)
-{
+{ _fn();
    printf("\n%s\n", text);
    exit(1);
 }
@@ -64,17 +72,17 @@ const char *LexSymboly[] = {
    "=", "<>", "<", ">", "<=", ">=", "(", ")", ":=",
    ",", ";",
    "var", "const", "begin", "end", "if", "then", "else",
-   "while", "do", "write"
+   "while", "do", "write", "read",
 };
 
 void ChybaSrovnani(LexSymbol s)
-{
+{ _fn();
    printf("chyba pri srovnani, ocekava se %s\n", LexSymboly[s]);
    exit(1);
 }
 
 void CtiSymb(void)
-{
+{ _fn();
    int delkaId;
 q0: 
    while (Vstup=='m') CtiVstup();
@@ -180,10 +188,12 @@ q0:
    default:
       Chyba("nedovoleny znak");
    }
+   _return_void;
 }
 
 void InitLexan(char *jmeno)
-{
+{ _fn();
    InitVstup(jmeno);
    CtiVstup();
+   _return_void;
 }
