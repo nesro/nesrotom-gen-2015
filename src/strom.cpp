@@ -8,6 +8,8 @@
 
 #include "code.h"
 
+extern TmSource *g_ts;
+
 /******************************************************************************/
 
 /******************************************************************************/
@@ -387,11 +389,10 @@ void Assign::Translate() {
 
 void Write::Translate() {
 	_fn();
+
 	expr->Translate();
 
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(WRT);
-#endif
+	g_ts->addInstr(OUT, 0, 0, 0);
 
 	_return_void;
 }
@@ -400,9 +401,6 @@ void Read::Translate() {
 	_fn();
 	expr->Translate();
 
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(READ, ((Var *) this->expr)->addr);
-#endif
 
 	_return_void;
 }
@@ -418,28 +416,13 @@ void If::Translate() {
 
 	cond->Translate();
 
-#if _DO_YOU_WANT_ZASPOC_
-	a1 = Gener(IFJ);
-#endif
 
 	thenstm->Translate();
 
 	if (elsestm) {
-
-#if _DO_YOU_WANT_ZASPOC_
-		a2 = Gener(JU);
-		PutIC(a1);
-#endif
-
 		elsestm->Translate();
-
-#if _DO_YOU_WANT_ZASPOC_
-		PutIC(a2);
-#endif
 	} else {
-#if _DO_YOU_WANT_ZASPOC_
-		PutIC(a1);
-#endif
+		//
 	}
 
 	_return_void;
@@ -455,17 +438,7 @@ void While::Translate() {
 
 	cond->Translate();
 
-#if _DO_YOU_WANT_ZASPOC_
-	GetIC();
-	a2 = Gener(IFJ);
-#endif
-
 	body->Translate();
-
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(JU, a1);
-	PutIC(a2);
-#endif
 
 	_return_void;
 }
@@ -485,16 +458,12 @@ void StatmList::Translate() {
 void Prog::Translate() {
 	_fn();
 
-	//source_vector.add(new CodeLine(ld, 6, 0, 0));
-
-	//LD  6,0(0)
-	//  1:     ST  0,0(0)
+	g_ts->addInstr(LD, 6, 0, 0);
+	g_ts->addInstr(ST, 0, 0, 0);
 
 	stm->Translate();
 
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(STOP);
-#endif
+	g_ts->addInstr(HALT, 0, 0, 0);
 
 	_return_void;
 }
@@ -507,14 +476,15 @@ Expr *VarOrConst(char *id) {
 	switch (druh) {
 	case IdProm:
 		_return(new Var(v, true))
-;		break;
+		;
+		break;
 
-		case IdKonst:
+	case IdKonst:
 		_return(new Numb(v));
 		break;
 
-		case Nedef:
-		default:
+	case Nedef:
+	default:
 		_return(0);
 		break;
 	}

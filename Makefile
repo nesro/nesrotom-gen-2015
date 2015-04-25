@@ -8,7 +8,7 @@ OBJECTS=debug.o \
 	parser.o \
 	tabsym.o \
 	vstup.o \
-	zaspoc.o \
+	code.o
 
 CC=g++
 LD=g++
@@ -29,7 +29,7 @@ $(BINARY): $(OBJECTS) ./main.o
 	$(addprefix $(BUILD)/, $(OBJECTS)) -o $(BINARY) $(CLIBS)
 
 main.o: $(SOURCE_DIR)/main.cpp $(SOURCE_DIR)/lexan.h $(SOURCE_DIR)/parser.h \
-$(SOURCE_DIR)/strom.h $(SOURCE_DIR)/zaspoc.h
+$(SOURCE_DIR)/strom.h $(SOURCE_DIR)/code.h
 	$(CC) $(CFLAGS) -c -o $(BUILD)/$@ $< $(CLIBS)
 
 debug.o: $(SOURCE_DIR)/debug.cpp $(SOURCE_DIR)/debug.h
@@ -50,6 +50,6 @@ tabsym.o: $(SOURCE_DIR)/tabsym.cpp $(SOURCE_DIR)/tabsym.h
 vstup.o: $(SOURCE_DIR)/vstup.cpp $(SOURCE_DIR)/vstup.h
 	$(CC) $(CFLAGS) -c -o $(BUILD)/$@ $< $(CLIBS)
 
-zaspoc.o: $(SOURCE_DIR)/zaspoc.cpp $(SOURCE_DIR)/zaspoc.h
+code.o: $(SOURCE_DIR)/code.cpp $(SOURCE_DIR)/code.h
 	$(CC) $(CFLAGS) -c -o $(BUILD)/$@ $< $(CLIBS)
 

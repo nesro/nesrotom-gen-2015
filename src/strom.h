@@ -1,9 +1,22 @@
-/* strom.h */
 
 #ifndef _STROM_
 #define _STROM_
 
-#include "zaspoc.h"
+#define _DO_YOU_WANT_ZASPOC_ 0
+
+enum Operator {
+   Plus, //
+   Minus, //
+   Times, //
+   Divide, //
+   Eq, //
+   NotEq, //
+   Less, //
+   Greater, //
+   LessOrEq, //
+   GreaterOrEq, //
+   Error, //
+};
 
 class Node {
 public:

@@ -22,30 +22,13 @@ void __return_void_inner(const char *file, int line, const char *function);
 #define _fn() \
 	__fn_inner(__FILE__, __LINE__,  __FUNCTION__)
 
-#define _return(r) \
-	__return_inner(__FILE__, __LINE__,  __FUNCTION__, #r); return (r)
+#define _return(r) do { \
+	__return_inner(__FILE__, __LINE__,  __FUNCTION__, #r); \
+	return (r); \
+} while(0)
 
 #define _return_void \
 	__return_void_inner(__FILE__, __LINE__,  __FUNCTION__)
-
-/*****************************************************************************/
-
-/* #define _return(r) do { \
-	assert(0 <= _debug_depth); \
-	print_debug_depth(); \
-	(void) fprintf(stderr, "%s:%d | %s return\n", __FILE__, __LINE__, \
-	     __FUNCTION__); \
-	_debug_depth--; \
-	return (r); \
-} while (0) */
-
-/* #define _return_void do { \
-	assert(0 <= _debug_depth); \
-	print_debug_depth(); \
-	(void) fprintf(stderr, "%s:%d | %s return void\n", __FILE__, __LINE__, \
-	     __FUNCTION__); \
-	_debug_depth--; \
-} while (0) */
 
 #endif
 
