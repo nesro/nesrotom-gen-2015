@@ -64,7 +64,7 @@ public:
 	int addInstr(instruction_t, int, int, int);
 	int addInstr(instruction_t, int, int, int, const char *);
 
-	void print(bool printComments);
+	void print(const char *file_name, bool printComments);
 
 	TmSource(void);
 	~TmSource(void);
@@ -87,16 +87,32 @@ public:
  * kdyz pudu do novyho vyrazu, podivam se, jestli to nemam v registrech
  * kdyz skocim pryc, nebudu si pamatovat nic a zacnu znova
  */
-class Stack {
+class Storage {
 public:
+
+	static const int gp = 5;
+	static const int mp = 6;
+	static const int pc = 7;
+
+	/* after using this amount of registers, we need to use memory */
+	static const int reg_stack_size = 5;
+
 	int srp[5]; /* stack registers permutation */
-	int size;
+	int age[5]; /* age of a register */
 
+	int stack_size;
+	int stack_top;
+
+	/* pop register and get its number */
 	int pop(void);
-	void push(int);
 
-	Stack();
-	~Stack();
+	/* push register and get its number */
+	int push(void);
+
+	int top(void);
+
+	Storage();
+	~Storage();
 };
 
 #endif /* SRC_CODE_H_ */

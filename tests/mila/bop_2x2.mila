@@ -1,0 +1,9 @@
+var x;
+var y;
+begin
+	x := 7 + 8;
+	y := 8 + 9;
+	write x;
+	write y;
+end;
+

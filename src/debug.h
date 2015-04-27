@@ -7,6 +7,7 @@
 #ifndef _debug_h_
 #define _debug_h_
 
+extern int g_debug_level;
 extern int _debug_depth;
 
 /*****************************************************************************/

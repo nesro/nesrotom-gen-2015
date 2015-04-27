@@ -12,12 +12,14 @@
 
 /* global variables */
 TmSource *g_ts = NULL;
+Storage *g_s = NULL;
 int g_debug_level = 0;
 int g_optimize_level = 0;
 int g_verbose_level = 0;
 char *g_input = NULL;
-char *g_output = NULL;
+const char *g_output = NULL;
 int g_run_stack_machine = 0;
+extern int g_debug_level;
 
 static void usage(void) {
 	_fn();
@@ -40,7 +42,6 @@ int main(int argc, char *argv[]) {
 			break;
 
 		case 'o':
-			printf("out!\n");
 			g_output = optarg;
 			break;
 
@@ -107,11 +108,13 @@ int main(int argc, char *argv[]) {
 	}
 
 	g_ts = new TmSource();
+	g_s = new Storage();
 	prog->Translate();
 
-	g_ts->print(true);
+	g_ts->print(g_output, true);
 
 	delete g_ts;
+	delete g_s;
 
 	_return(EXIT_SUCCESS);
 }

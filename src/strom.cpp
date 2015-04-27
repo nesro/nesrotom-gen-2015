@@ -9,6 +9,7 @@
 #include "code.h"
 
 extern TmSource *g_ts;
+extern Storage *g_s;
 
 /******************************************************************************/
 
@@ -85,15 +86,15 @@ Write::~Write() {
 	_return_void;
 }
 
-Read::Read(Expr *e) {
+Read::Read(Var *v) {
 	_fn();
-	expr = e;
+	var = v;
 	_return_void;
 }
 
 Read::~Read() {
 	_fn();
-	delete expr;
+	delete var;
 	_return_void;
 }
 
@@ -255,7 +256,7 @@ Node *Write::Optimize() {
 
 Node *Read::Optimize() {
 	_fn();
-	expr = (Expr *) (expr->Optimize());
+	//FIXME?
 	_return(this);
 }
 
@@ -328,40 +329,40 @@ Node *Prog::Optimize() {
 
 void Var::Translate() {
 	_fn();
-
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(TA, addr);
-#endif
-
-	if (rvalue) {
-#if _DO_YOU_WANT_ZASPOC_
-		Gener(DR);
-#endif
-	}
-
+	g_ts->addInstr(LD, g_s->push(), addr, Storage::gp);
 	_return_void;
 }
 
 void Numb::Translate() {
 	_fn();
-
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(TC, value);
-#endif
-
+	if (g_debug_level > 5)
+	fprintf(stderr, "numb=%d\n", value);
+	g_ts->addInstr(LDC, g_s->push(), value, 0);
 	_return_void;
 }
 
+/* vysledek bopu na vrcholu zasobniku */
 void Bop::Translate() {
 	_fn();
-	left->Translate();
-	right->Translate();
 
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(BOP, op);
-#endif
+	if (g_debug_level > 5)
+	fprintf(stderr, "left translate\n");
+	left->Translate(); //result of the left is on the top
 
-	_return_void;
+	if (g_debug_level > 5)
+	fprintf(stderr, "right translate\n");
+	right->Translate(); // result of the right is on the top
+
+	int ra = g_s->pop();
+	int rb = g_s->top();
+
+	switch (op) {
+	case Plus:
+		g_ts->addInstr(ADD, rb, rb, ra, "op +");
+		break;
+	default:
+		break;
+	}
 }
 
 void UnMinus::Translate() {
@@ -377,31 +378,25 @@ void UnMinus::Translate() {
 
 void Assign::Translate() {
 	_fn();
-	var->Translate();
-	expr->Translate();
-
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(ST);
-#endif
-
+	expr->Translate(); // pushes result on top of the stack
+	g_ts->addInstr(ST, g_s->top(), var->addr, Storage::gp);
+	(void) g_s->pop();
 	_return_void;
 }
 
 void Write::Translate() {
 	_fn();
-
 	expr->Translate();
-
-	g_ts->addInstr(OUT, 0, 0, 0);
-
+	g_ts->addInstr(OUT, g_s->pop(), 0, 0);
 	_return_void;
 }
 
 void Read::Translate() {
 	_fn();
-	expr->Translate();
-
-
+	int reg = g_s->push();
+	g_ts->addInstr(IN, reg, 0, 0);
+	g_ts->addInstr(ST, reg, var->addr, Storage::gp);
+	(void) g_s->pop();
 	_return_void;
 }
 
@@ -415,7 +410,6 @@ void If::Translate() {
 	a2 = a1;
 
 	cond->Translate();
-
 
 	thenstm->Translate();
 
@@ -437,9 +431,7 @@ void While::Translate() {
 	a2 = a1;
 
 	cond->Translate();
-
 	body->Translate();
-
 	_return_void;
 }
 
@@ -457,14 +449,10 @@ void StatmList::Translate() {
 
 void Prog::Translate() {
 	_fn();
-
 	g_ts->addInstr(LD, 6, 0, 0);
 	g_ts->addInstr(ST, 0, 0, 0);
-
 	stm->Translate();
-
 	g_ts->addInstr(HALT, 0, 0, 0);
-
 	_return_void;
 }
 
@@ -475,8 +463,7 @@ Expr *VarOrConst(char *id) {
 
 	switch (druh) {
 	case IdProm:
-		_return(new Var(v, true))
-		;
+		_return(new Var(v, true));
 		break;
 
 	case IdKonst:
