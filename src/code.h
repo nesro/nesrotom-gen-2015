@@ -1,40 +1,41 @@
+#include <list>
 #include <vector>
 
 #ifndef SRC_CODE_H_
 #define SRC_CODE_H_
-	typedef enum type {
-		RR, //
-		RM, //
-		RA, //
-		BLANK_T, //
-		COMMENT_T, //
-	} type_t;
+typedef enum type {
+	RR, //
+	RM, //
+	RA, //
+	BLANK_T, //
+	COMMENT_T, //
+} type_t;
 
-	typedef enum instruction {
-		HALT, //
-		IN, //
-		OUT, //
-		ADD, //
-		INC, //
-		DEC, //
-		SHR, //
-		SHL, //
-		SUB, //
-		MUL, //
-		DIV, //
-		LD, //
-		ST, //
-		LDA, //
-		LDC, //
-		JLT, //
-		JLE, //
-		JGT, //
-		JGE, //
-		JEQ, //
-		JNE, //
-		BLANK, //
-		COMMENT, //
-	} instruction_t;
+typedef enum instruction {
+	HALT, //
+	IN, //
+	OUT, //
+	ADD, //
+	INC, //
+	DEC, //
+	SHR, //
+	SHL, //
+	SUB, //
+	MUL, //
+	DIV, //
+	LD, //
+	ST, //
+	LDA, //
+	LDC, //
+	JLT, //
+	JLE, //
+	JGT, //
+	JGE, //
+	JEQ, //
+	JNE, //
+	BLANK, //
+	COMMENT, //
+} instruction_t;
 
 class CodeLine {
 public:
@@ -82,34 +83,27 @@ public:
  * r6 - mp - memory pointer (temp storage)
  * r7 - pc
  */
-/*
- * budu si drzet co mam ulozeny naposled a v pripade potreby provedu rotaci
- * kdyz pudu do novyho vyrazu, podivam se, jestli to nemam v registrech
- * kdyz skocim pryc, nebudu si pamatovat nic a zacnu znova
- */
 class Storage {
 public:
-
 	static const int gp = 5;
 	static const int mp = 6;
 	static const int pc = 7;
-
-	/* after using this amount of registers, we need to use memory */
 	static const int reg_stack_size = 5;
 
-	int srp[5]; /* stack registers permutation */
-	int age[5]; /* age of a register */
-
-	int stack_size;
-	int stack_top;
-
-	/* pop register and get its number */
-	int pop(void);
+	int reg_top;
+	int reg_cnt;
+	int mem_top;
 
 	/* push register and get its number */
 	int push(void);
 
+	/* pop register and get its number */
+	int pop(void);
+
+	/* just get the stack's top number */
 	int top(void);
+
+	void print(void);
 
 	Storage();
 	~Storage();

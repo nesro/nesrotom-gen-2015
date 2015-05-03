@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.toolchain.gnu.base.2145935434/CFLAGS/delimiter=\:
+environment/project/cdt.managedbuild.toolchain.gnu.base.2145935434/CFLAGS/operation=append
+environment/project/cdt.managedbuild.toolchain.gnu.base.2145935434/CFLAGS/value=-std\=c++11
+environment/project/cdt.managedbuild.toolchain.gnu.base.2145935434/append=true
+environment/project/cdt.managedbuild.toolchain.gnu.base.2145935434/appendContributed=true

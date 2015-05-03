@@ -336,7 +336,7 @@ void Var::Translate() {
 void Numb::Translate() {
 	_fn();
 	if (g_debug_level > 5)
-	fprintf(stderr, "numb=%d\n", value);
+		fprintf(stderr, "numb=%d\n", value);
 	g_ts->addInstr(LDC, g_s->push(), value, 0);
 	_return_void;
 }
@@ -346,11 +346,11 @@ void Bop::Translate() {
 	_fn();
 
 	if (g_debug_level > 5)
-	fprintf(stderr, "left translate\n");
+		fprintf(stderr, "left translate\n");
 	left->Translate(); //result of the left is on the top
 
 	if (g_debug_level > 5)
-	fprintf(stderr, "right translate\n");
+		fprintf(stderr, "right translate\n");
 	right->Translate(); // result of the right is on the top
 
 	int ra = g_s->pop();
@@ -360,19 +360,73 @@ void Bop::Translate() {
 	case Plus:
 		g_ts->addInstr(ADD, rb, rb, ra, "op +");
 		break;
+	case Minus:
+		g_ts->addInstr(SUB, rb, rb, ra, "op -");
+		break;
+	case Times:
+		g_ts->addInstr(MUL, rb, rb, ra, "op *");
+		break;
+	case Divide:
+		g_ts->addInstr(DIV, rb, rb, ra, "op /");
+		break;
+	case Less:
+		g_ts->addInstr(SUB, rb, ra, rb, "op <");
+		g_ts->addInstr(JLT, rb, 2, Storage::pc);
+		g_ts->addInstr(LDC, rb, 0, rb);
+		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
+		g_ts->addInstr(LDC, rb, 1, rb);
+		break;
+	case Eq:
+		g_ts->addInstr(SUB, rb, ra, rb, "op ==");
+		g_ts->addInstr(JEQ, rb, 2, Storage::pc);
+		g_ts->addInstr(LDC, rb, 0, rb);
+		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
+		g_ts->addInstr(LDC, rb, 1, rb);
+		break;
+	case NotEq:
+		g_ts->addInstr(SUB, rb, ra, rb, "op !=");
+		g_ts->addInstr(JNE, rb, 2, Storage::pc);
+		g_ts->addInstr(LDC, rb, 0, rb);
+		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
+		g_ts->addInstr(LDC, rb, 1, rb);
+		break;
+	case Greater:
+		g_ts->addInstr(SUB, rb, ra, rb, "op >");
+		g_ts->addInstr(JGT, rb, 2, Storage::pc);
+		g_ts->addInstr(LDC, rb, 0, rb);
+		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
+		g_ts->addInstr(LDC, rb, 1, rb);
+		break;
+	case LessOrEq:
+		g_ts->addInstr(SUB, rb, ra, rb, "op <=");
+		g_ts->addInstr(JLE, rb, 2, Storage::pc);
+		g_ts->addInstr(LDC, rb, 0, rb);
+		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
+		g_ts->addInstr(LDC, rb, 1, rb);
+		break;
+	case GreaterOrEq:
+		g_ts->addInstr(SUB, rb, ra, rb, "op >=");
+		g_ts->addInstr(JGE, rb, 2, Storage::pc);
+		g_ts->addInstr(LDC, rb, 0, rb);
+		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
+		g_ts->addInstr(LDC, rb, 1, rb);
+		break;
 	default:
 		break;
 	}
+
+	_return_void;
 }
 
 void UnMinus::Translate() {
 	_fn();
+	int p;
+	int t;
 	expr->Translate();
-
-#if _DO_YOU_WANT_ZASPOC_
-	Gener(UNM);
-#endif
-
+	g_ts->addInstr(LDC, g_s->push(), 0, 0);
+	p = g_s->pop();
+	t = g_s->top();
+	g_ts->addInstr(SUB, t, p, t, "op -");
 	_return_void;
 }
 
@@ -449,6 +503,8 @@ void StatmList::Translate() {
 
 void Prog::Translate() {
 	_fn();
+	if (0 < g_debug_level)
+		fprintf(stderr, "-----------------------------------------TRANSLATE\n");
 	g_ts->addInstr(LD, 6, 0, 0);
 	g_ts->addInstr(ST, 0, 0, 0);
 	stm->Translate();

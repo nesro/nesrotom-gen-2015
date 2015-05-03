@@ -7,6 +7,8 @@
 
 int CodeLine::last_line_number = 0;
 
+extern TmSource *g_ts;
+
 type_t CodeLine::get_type(instruction_t instr) {
 	switch (instr) {
 	case HALT:
@@ -135,13 +137,13 @@ void TmSource::print(const char *file_name, bool printComments) {
 				break;
 			}
 
-			fprintf(f, "// %s\n",
+			fprintf(f, "* %s\n",
 					this->lines[i]->comment_str == NULL ?
 							"null" : this->lines[i]->comment_str);
 			break;
 		case RR:
 			if (printComments && this->lines[i]->comment_str != NULL) {
-				fprintf(f, "//%s\n", this->lines[i]->comment_str);
+				fprintf(f, "* %s\n", this->lines[i]->comment_str);
 			}
 			fprintf(f, "%02d:%10s%10d,%d,%d\n", this->lines[i]->line_number,
 					instr_str[this->lines[i]->instruction],
@@ -151,7 +153,7 @@ void TmSource::print(const char *file_name, bool printComments) {
 		case RM:
 		case RA:
 			if (printComments && this->lines[i]->comment_str != NULL) {
-				fprintf(f, "//%s\n", this->lines[i]->comment_str);
+				fprintf(f, "* %s\n", this->lines[i]->comment_str);
 			}
 			fprintf(f, "%02d:%10s%10d,%d(%d)\n", this->lines[i]->line_number,
 					instr_str[this->lines[i]->instruction],
@@ -175,39 +177,119 @@ TmSource::TmSource(void) {
 TmSource::~TmSource(void) {
 }
 
-/***************************/
-
-int Storage::pop(void) {
-	_fn();
-	if (g_debug_level > 5)
-		fprintf(stderr, "stack_size=%d, stack_top=%d\n", this->stack_size,
-				this->stack_top);
-	//assert(stack_size > 0);
-	this->stack_size--;
-	_return(this->stack_top--);
-}
+/*****************************************************************************/
 
 int Storage::push(void) {
 	_fn();
 	if (g_debug_level > 5)
-		fprintf(stderr, "stack_size=%d, stack_top=%d\n", this->stack_size,
-				this->stack_top);
-	this->stack_size++;
-	_return(++this->stack_top);
+		this->print();
+
+	if (this->reg_cnt == this->reg_stack_size) {
+		/* ST r,d(s) = mem(d + reg(s)) = reg(r) */
+
+		if (g_debug_level > 5) {
+			print_debug_depth();
+			fprintf(stderr, "ST %d\n",
+					(this->reg_top + 1) % this->reg_stack_size);
+		}
+
+		g_ts->addInstr(ST, (this->reg_top + 1) % this->reg_stack_size,
+				-(++this->mem_top), Storage::mp);
+	} else {
+		this->reg_cnt++;
+	}
+
+	this->reg_top++;
+	this->reg_top %= this->reg_stack_size;
+
+	if (g_debug_level > 5)
+		this->print();
+
+	assert(0 <= this->reg_top);
+	_return(this->reg_top);
+}
+
+int Storage::pop(void) {
+	_fn();
+	int ret;
+
+	if (g_debug_level > 5)
+		this->print();
+
+	ret = this->reg_top;
+
+	if (this->reg_cnt == 0) {
+		assert(0 <= this->mem_top);
+		if (g_debug_level > 5) {
+			print_debug_depth();
+			fprintf(stderr, "LD %d\n", this->mem_top);
+		}
+		/* LD r,d(s) = reg(r) = mem(d + reg(s)) */
+		g_ts->addInstr(LD, --this->reg_top, -(this->mem_top--), Storage::mp,
+				"pop");
+	} else {
+		this->reg_cnt--;
+		this->reg_top--;
+	}
+
+	if (this->reg_top == -1) {
+		this->reg_top = this->reg_stack_size - 1;
+	}
+
+	if (g_debug_level > 5) {
+		this->print();
+		print_debug_depth();
+		fprintf(stderr, "ret=%d\n", ret);
+	}
+
+	_return(ret);
 }
 
 int Storage::top(void) {
 	_fn();
 	if (g_debug_level > 5)
-		fprintf(stderr, "stack_size=%d, stack_top=%d\n", this->stack_size,
-				this->stack_top);
-	//assert(stack_size >= 0);
-	_return(this->stack_top);
+		this->print();
+
+	/* kdyz jsme popli posledni registr a ptame se na top, ktery je ale v mem */
+	if (this->reg_cnt == 0) {
+		assert(0 <= this->mem_top);
+		if (g_debug_level > 5) {
+			print_debug_depth();
+			fprintf(stderr, "LD %d\n", this->mem_top);
+		}
+		/* LD r,d(s) = reg(r) = mem(d + reg(s)) */
+		g_ts->addInstr(LD, this->reg_top, -(this->mem_top--), Storage::mp,
+				"top");
+
+		if (this->reg_top == -1) {
+			this->reg_top = this->reg_stack_size - 1;
+		}
+
+		this->reg_cnt++;
+	}
+
+	assert(0 <= this->reg_cnt);
+	assert(0 <= this->reg_top);
+	_return(this->reg_top);
+}
+
+void Storage::print(void) {
+	print_debug_depth();
+	fprintf(stderr, "reg_top=%d, reg_cnt=%d, mem_top=%d\n", this->reg_top,
+			this->reg_cnt, this->mem_top);
 }
 
 Storage::Storage() {
-	this->stack_size = 0;
-	this->stack_top = -1;
+	_fn();
+
+	this->reg_cnt = 0;
+	this->mem_top = -1;
+	this->reg_top = -1;
+
+	_return_void;
 }
+
 Storage::~Storage() {
+	_fn();
+	_return_void;
 }
