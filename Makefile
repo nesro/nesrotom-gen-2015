@@ -6,9 +6,9 @@ OBJECTS=debug.o \
 	strom.o \
 	lexan.o \
 	parser.o \
+	code.o \
 	tabsym.o \
-	vstup.o \
-	code.o
+	vstup.o
 
 CC=g++
 LD=g++
@@ -16,7 +16,8 @@ MKDIR_P=mkdir -p
 MAKE=make
 
 CLIBS=
-CFLAGS=-Wall -Wextra -Werror -pedantic -ggdb -std=c++11
+CFLAGS=-O2 -Wall -Wextra -Wformat-security -Wshadow -Wlogical-op -Wfloat-equal \
+-Werror -pedantic -ggdb -std=c++11
 
 SOURCE_DIR=./src
 SRC=./src

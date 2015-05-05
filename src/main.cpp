@@ -99,6 +99,9 @@ int main(int argc, char *argv[]) {
 				g_output ? g_input : "stdout");
 	}
 
+	g_ts = new TmSource();
+	g_s = new Storage();
+
 	InitLexan(g_input);
 	CtiSymb();
 	Prog *prog = Program();
@@ -107,8 +110,6 @@ int main(int argc, char *argv[]) {
 		prog = (Prog *) (prog->Optimize());
 	}
 
-	g_ts = new TmSource();
-	g_s = new Storage();
 	prog->Translate();
 
 	g_ts->print(g_output, true);

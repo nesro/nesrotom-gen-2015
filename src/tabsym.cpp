@@ -2,8 +2,12 @@
 
 #include "tabsym.h"
 #include "debug.h"
+#include "code.h"
 #include <string.h>
 #include <stdio.h>
+
+/* from main.cpp */
+extern Storage *g_s;
 
 struct PrvekTab {
 	char *ident;
@@ -15,11 +19,13 @@ struct PrvekTab {
 
 PrvekTab::PrvekTab(char *i, DruhId d, int h, PrvekTab *n) {
 	_fn();
+	/* TODO: strdup? :D */
 	ident = new char[strlen(i) + 1];
 	strcpy(ident, i);
 	druh = d;
 	hodn = h;
 	dalsi = n;
+	g_s->mem_top++;
 	_return_void;
 }
 

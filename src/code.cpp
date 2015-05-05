@@ -194,7 +194,7 @@ int Storage::push(void) {
 		}
 
 		g_ts->addInstr(ST, (this->reg_top + 1) % this->reg_stack_size,
-				-(++this->mem_top), Storage::mp);
+				(++this->mem_top), Storage::zero);
 	} else {
 		this->reg_cnt++;
 	}
@@ -225,7 +225,7 @@ int Storage::pop(void) {
 			fprintf(stderr, "LD %d\n", this->mem_top);
 		}
 		/* LD r,d(s) = reg(r) = mem(d + reg(s)) */
-		g_ts->addInstr(LD, --this->reg_top, -(this->mem_top--), Storage::mp,
+		g_ts->addInstr(LD, --this->reg_top, (this->mem_top--), Storage::zero,
 				"pop");
 	} else {
 		this->reg_cnt--;
@@ -258,7 +258,7 @@ int Storage::top(void) {
 			fprintf(stderr, "LD %d\n", this->mem_top);
 		}
 		/* LD r,d(s) = reg(r) = mem(d + reg(s)) */
-		g_ts->addInstr(LD, this->reg_top, -(this->mem_top--), Storage::mp,
+		g_ts->addInstr(LD, this->reg_top, (this->mem_top--), Storage::zero,
 				"top");
 
 		if (this->reg_top == -1) {
@@ -283,8 +283,8 @@ Storage::Storage() {
 	_fn();
 
 	this->reg_cnt = 0;
-	this->mem_top = -1;
 	this->reg_top = -1;
+	this->mem_top = 100;
 
 	_return_void;
 }

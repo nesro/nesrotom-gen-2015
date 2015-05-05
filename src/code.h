@@ -79,19 +79,22 @@ public:
  * r2 - stack
  * r3 - stack
  * r4 - stack
- * r5 - gp - global pointer (variable storage)
- * r6 - mp - memory pointer (temp storage)
+ * r5 - stack (before: gp - global pointer (variable storage))
+ * r6 - zero (before: mp - memory pointer (temp storage))
  * r7 - pc
  */
 class Storage {
 public:
-	static const int gp = 5;
-	static const int mp = 6;
+//	static const int gp = 5;
+//	static const int mp = 6;
+	static const int zero = 6;
 	static const int pc = 7;
-	static const int reg_stack_size = 5;
+	static const int reg_stack_size = 6;
 
 	int reg_top;
 	int reg_cnt;
+
+	/* the top of temp storage in the memory, this will compute in tabsym.cpp */
 	int mem_top;
 
 	/* push register and get its number */

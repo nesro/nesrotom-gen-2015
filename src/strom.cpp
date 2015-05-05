@@ -219,6 +219,7 @@ Node *Bop::Optimize() {
 		break;
 
 	case Error: //nenastane
+	default:
 		res = 0;
 		assert(0);
 		break;
@@ -329,7 +330,7 @@ Node *Prog::Optimize() {
 
 void Var::Translate() {
 	_fn();
-	g_ts->addInstr(LD, g_s->push(), addr, Storage::gp);
+	g_ts->addInstr(LD, g_s->push(), addr, Storage::zero);
 	_return_void;
 }
 
@@ -433,7 +434,7 @@ void UnMinus::Translate() {
 void Assign::Translate() {
 	_fn();
 	expr->Translate(); // pushes result on top of the stack
-	g_ts->addInstr(ST, g_s->top(), var->addr, Storage::gp);
+	g_ts->addInstr(ST, g_s->top(), var->addr, Storage::zero);
 	(void) g_s->pop();
 	_return_void;
 }
@@ -449,7 +450,7 @@ void Read::Translate() {
 	_fn();
 	int reg = g_s->push();
 	g_ts->addInstr(IN, reg, 0, 0);
-	g_ts->addInstr(ST, reg, var->addr, Storage::gp);
+	g_ts->addInstr(ST, reg, var->addr, Storage::zero);
 	(void) g_s->pop();
 	_return_void;
 }
@@ -505,8 +506,9 @@ void Prog::Translate() {
 	_fn();
 	if (0 < g_debug_level)
 		fprintf(stderr, "-----------------------------------------TRANSLATE\n");
-	g_ts->addInstr(LD, 6, 0, 0);
-	g_ts->addInstr(ST, 0, 0, 0);
+	//TODO: kontrola, jestli mam dost pameti - pridat do readme
+//	g_ts->addInstr(LD, 6, 0, 0);
+//	g_ts->addInstr(ST, 0, 0, 0);
 	stm->Translate();
 	g_ts->addInstr(HALT, 0, 0, 0);
 	_return_void;
