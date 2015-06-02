@@ -1,0 +1,19 @@
+var i, j, k;
+begin
+	i := 3;
+	j := 4;
+
+	k := (i + j) * (j - i) + (i + j) + (j + i + j) * (j - i);
+	{ (3+4)(4-3)+(3+4)+(4+3+4)*(4-3) = 25}
+	write k;
+
+	k := (i + j + i + j + i + j + i + j) * (i + j + i + j + i + j + i + j);
+	{ 784 }
+	write k;
+
+	k := (((i+j)*(i+j))*((i+j)*(i+j)))*(((i+j)*(i+j))*((i+j)*(i+j)));
+	write k;
+
+	k := (((i+j)*(i-j))*((i+j)*(i+j)))*(((i+j)*(i-j))*((i+j)*(i+j)));
+	write k;
+end

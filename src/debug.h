@@ -41,15 +41,19 @@ void __return_void_inner(const char *file, int line, const char *function);
 #define KWHT  "\x1B[37m"
 
 #define _debug(msg, ...) do { \
+	if (0 < g_debug_level) {\
 		print_debug_depth(); \
 		fprintf(stderr, KRED msg KNRM, __VA_ARGS__); \
 		fflush(stderr); \
+	} \
 } while (0);
 
 #define _debug2(msg) do { \
+	if (0 < g_debug_level) {\
 		print_debug_depth(); \
 		fprintf(stderr, KRED msg KNRM); \
 		fflush(stderr); \
+	} \
 } while (0);
 
 #endif

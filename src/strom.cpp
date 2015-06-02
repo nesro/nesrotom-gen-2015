@@ -101,10 +101,13 @@ bool find_subtree_in_bop(std::vector<Bop *> &vb, Bop *haystack, Bop *needle) {
 	_debug("haystack %p op=%d, needle %p op=%d\n", (void* )haystack,
 			haystack->op, (void * )needle, needle->op);
 
-	if (haystack != needle && cmp_bop(needle, haystack)) {
+	if (haystack != needle && needle->dup_parent != haystack
+			&& haystack->dup_parent != needle && cmp_bop(needle, haystack)) {
 
 		Bop *orig = needle;
-		while (orig->dup_parent) {
+		while (orig->dup_parent && orig->dup_parent != orig) {
+			_debug("orig=%p, orig->dup_parent=%p\n", (void* )orig,
+					(void* )orig->dup_parent);
 			orig = orig->dup_parent;
 		}
 		if (!needle->dup_parent) {
@@ -123,43 +126,81 @@ bool find_subtree_in_bop(std::vector<Bop *> &vb, Bop *haystack, Bop *needle) {
 
 		_return(true);
 	}
-	Bop *l = dynamic_cast<Bop *>(haystack->left);
-	Bop *r = dynamic_cast<Bop *>(haystack->right);
 
-	if (l) {
-		_debug("left bop=%p, op=%d\n", (void * )l, l ? l->op : 0);
+	Bop *hl = dynamic_cast<Bop *>(haystack->left);
+	Bop *hr = dynamic_cast<Bop *>(haystack->right);
+	_debug("hl=%p, hr=%p\n", (void * )hl, (void * )hr);
+	if (hl && find_subtree_in_bop(vb, hl, needle)) {
+//		_return(true);
 	}
-	if (r) {
-		_debug("right bop=%p, op=%d\n", (void * )r, r ? r->op : 0);
+	if (hr && find_subtree_in_bop(vb, hr, needle)) {
+//		_return(true);
 	}
 
-	if (l && find_subtree_in_bop(vb, l, needle)) {
-		_return(true);
+	//	if (l) {
+	//		_debug("left bop=%p, op=%d\n", (void * )l, l ? l->op : 0);
+	//	}
+	//	if (r) {
+	//		_debug("right bop=%p, op=%d\n", (void * )r, r ? r->op : 0);
+	//	}
+
+	_return(false);
+}
+
+/* true, if something has been found */
+bool local_optimize(std::vector<Bop *> &vb, Bop *h, Bop *n) {
+	_fn();
+	static int local_optimize_calls = 0;
+	_debug("local optimize op=%d calls=%d \n", h->op, local_optimize_calls++);
+	Bop *l = dynamic_cast<Bop *>(n->left);
+	Bop *r = dynamic_cast<Bop *>(n->right);
+	_debug("left %p\n", (void* )l);
+	_debug("right %p\n", (void* )r);
+	if (l && !l->dup_parent && find_subtree_in_bop(vb, h, l)) {
+//		_return(true);
 	}
-	if (r && find_subtree_in_bop(vb, r, needle)) {
-		_return(true);
+	if (r && !r->dup_parent && find_subtree_in_bop(vb, h, r)) {
+//		_return(true);
+	}
+	if (l && !l->dup_parent && local_optimize(vb, h, l)) {
+//		_return(true);
+	}
+	if (r && !r->dup_parent && local_optimize(vb, h, r)) {
+//		_return(true);
 	}
 	_return(false);
 }
-/* true, if something has been found */
-bool local_optimize(std::vector<Bop *> &vb, Bop *a) {
-	_fn();
-	_debug("local optimize op=%d\n", a->op);
-	bool ret = false;
-	Bop *l = dynamic_cast<Bop *>(a->left);
-	Bop *r = dynamic_cast<Bop *>(a->right);
-	_debug("left %p\n", (void* )l);
-	if (l && !l->dup_parent && find_subtree_in_bop(vb, a, l)) {
-		ret = true;
-		_debug("subtree has been found in l. %d\n", 666);
-	}
-	_debug("right %p\n", (void* )r);
-	if (r && !r->dup_parent && find_subtree_in_bop(vb, a, r)) {
-		ret = true;
-		_debug("subtree has been found in r. %d\n", 666);
-	}
-	_return(ret);
-}
+
+//void try2_find_bops(std::vector<Bop *> &bops, Bop *b) {
+//	if (b) {
+//		bops.push_back(b);
+//		Bop *ll = dynamic_cast<Bop *>(b->left);
+//		Bop *lr = dynamic_cast<Bop *>(b->right);
+//		if (ll) {
+//			try2_find_bops(bops, ll);
+//		}
+//		if (lr) {
+//			try2_find_bops(bops, lr);
+//		}
+//	}
+//}
+
+//void try2_optimize(Bop *b) {
+//	std::vector<Bop *> bops;
+//	try2_find_bops(bops, b);
+//
+//	for (int l = 0; l < bops.size(); ++l) {
+//		for (int r = l + 1; r < bops.size(); ++r) {
+//			if (cmp_bop(bops[l], bops[r])) {
+//				Bop *bl = bops[l];
+//				Bop *br = bops[r];
+//
+//				br->dup_parent = bl;
+//			}
+//		}
+//	}
+//}
+
 /******************************************************************************/
 
 void replaceDups(std::vector<Bop *> &vb, Bop *a) {
@@ -168,9 +209,9 @@ void replaceDups(std::vector<Bop *> &vb, Bop *a) {
 	Bop *l = dynamic_cast<Bop *>(a->left);
 	Bop *r = dynamic_cast<Bop *>(a->right);
 
-	for (auto i = vb.begin(); i != vb.end(); ++i)
-		std::cerr << *i << ' ';
-	std::cerr << std::endl;
+//	for (auto i = vb.begin(); i != vb.end(); ++i)
+//		std::cerr << *i << ' ';
+//	std::cerr << std::endl;
 
 	_debug("a=%p, l=%p r=%p\n", (void* )a, (void* )l, (void* )r);
 //	for (std::vector<Bop*>::iterator it = vb.begin(); it != vb.end(); ++it) {
@@ -204,7 +245,7 @@ void replaceDups(std::vector<Bop *> &vb, Bop *a) {
 	_return_void;
 }
 
-Node *Assign::Optimize() {
+Node * Assign::Optimize() {
 	_fn();
 
 	expr = (Var *) (expr->Optimize());
@@ -216,7 +257,7 @@ Node *Assign::Optimize() {
 	if (bop) {
 
 		/* find the same bops */
-		while (local_optimize(vb, bop))
+		while (local_optimize(vb, bop, bop))
 			;
 
 		StatmList *statm = new StatmList(this, NULL);
@@ -299,7 +340,7 @@ Bop::~Bop() {
 	_return_void;
 }
 
-UnMinus::UnMinus(Expr *e) {
+UnMinus::UnMinus(Expr * e) {
 	_fn();
 	expr = e;
 	_return_void;
@@ -311,7 +352,7 @@ UnMinus::~UnMinus() {
 	_return_void;
 }
 
-Assign::Assign(Var *v, Expr *e) {
+Assign::Assign(Var * v, Expr * e) {
 	_fn();
 	var = v;
 	expr = e;
@@ -325,7 +366,7 @@ Assign::~Assign() {
 	_return_void;
 }
 
-Write::Write(Expr *e) {
+Write::Write(Expr * e) {
 	_fn();
 	expr = e;
 	_return_void;
@@ -337,7 +378,7 @@ Write::~Write() {
 	_return_void;
 }
 
-Read::Read(Var *v) {
+Read::Read(Var * v) {
 	_fn();
 	var = v;
 	_return_void;
@@ -349,7 +390,7 @@ Read::~Read() {
 	_return_void;
 }
 
-If::If(Expr *c, Statm *ts, Statm *es) {
+If::If(Expr * c, Statm * ts, Statm * es) {
 	_fn();
 	cond = c;
 	thenstm = ts;
@@ -372,7 +413,7 @@ If::~If() {
 	_return_void;
 }
 
-While::While(Expr *c, Statm *b) {
+While::While(Expr * c, Statm * b) {
 	_fn();
 	cond = c;
 	body = b;
@@ -385,7 +426,7 @@ While::~While() {
 	_return_void;
 }
 
-StatmList::StatmList(Statm *s, StatmList *n) {
+StatmList::StatmList(Statm * s, StatmList * n) {
 	_fn();
 	statm = s;
 	next = n;
@@ -399,7 +440,7 @@ StatmList::~StatmList() {
 	_return_void;
 }
 
-Prog::Prog(StatmList *s) {
+Prog::Prog(StatmList * s) {
 	_fn();
 	stm = s;
 	_return_void;
@@ -413,7 +454,7 @@ Prog::~Prog() {
 
 /****************************************************************** OPTIMIZE */
 
-Node *Bop::Optimize() {
+Node * Bop::Optimize() {
 	_fn();
 
 	left = (Expr *) (left->Optimize());
@@ -481,7 +522,7 @@ Node *Bop::Optimize() {
 	_return(new Numb(res));
 }
 
-Node *UnMinus::Optimize() {
+Node * UnMinus::Optimize() {
 	_fn();
 	expr = (Expr *) expr->Optimize();
 	Numb *e = dynamic_cast<Numb *>(expr);
@@ -495,19 +536,19 @@ Node *UnMinus::Optimize() {
 	_return(e);
 }
 
-Node *Write::Optimize() {
+Node * Write::Optimize() {
 	_fn();
 	expr = (Expr *) (expr->Optimize());
 	_return(this);
 }
 
-Node *Read::Optimize() {
+Node * Read::Optimize() {
 	_fn();
 //FIXME?
 	_return(this);
 }
 
-Node *If::Optimize() {
+Node * If::Optimize() {
 	_fn();
 	cond = (Expr *) (cond->Optimize());
 	thenstm = (Statm *) (thenstm->Optimize());
@@ -536,7 +577,7 @@ Node *If::Optimize() {
 	_return(res);
 }
 
-Node *While::Optimize() {
+Node * While::Optimize() {
 	_fn();
 	cond = (Expr *) (cond->Optimize());
 	body = (Statm *) (body->Optimize());
@@ -554,7 +595,7 @@ Node *While::Optimize() {
 	_return(this);
 }
 
-Node *StatmList::Optimize() {
+Node * StatmList::Optimize() {
 	_fn();
 	StatmList *s = this;
 
@@ -566,7 +607,7 @@ Node *StatmList::Optimize() {
 	_return(this);
 }
 
-Node *Prog::Optimize() {
+Node * Prog::Optimize() {
 	_fn();
 
 	_debug("-------------- optimize %d\n", 0);

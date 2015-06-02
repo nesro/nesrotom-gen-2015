@@ -107,12 +107,12 @@ int main(int argc, char *argv[]) {
 	CtiSymb();
 	g_prog = Program();
 
-	printf("BEFORE OPTIMALIZATION:\n");
+	_debug2("BEFORE OPTIMALIZATION:\n");
 	g_prog->print();
 
 	if (0 < g_optimize_level) {
 		g_prog = (Prog *) (g_prog->Optimize());
-		printf("AFTER OPTIMALIZATION:\n");
+		_debug2("AFTER OPTIMALIZATION:\n");
 		g_prog->print();
 	}
 

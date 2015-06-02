@@ -92,7 +92,7 @@ void Dekl() {
 void DeklKonst() {
 	_fn();
 	char id[MaxLenIdent];
-	int hod;
+	int hod = -666;
 	CtiSymb();
 	Srovnani_IDENT(id);
 	Srovnani(EQ);
@@ -108,7 +108,7 @@ void ZbDeklKonst() {
 
 	if (Symb == COMMA) {
 		char id[MaxLenIdent];
-		int hod;
+		int hod = -666;
 		CtiSymb();
 		Srovnani_IDENT(id);
 		Srovnani(EQ);
@@ -349,12 +349,12 @@ Expr *Faktor() {
 		_return(VarOrConst(id));
 		break;
 
-	case NUMB:
-		int hodn;
+	case NUMB: {
+		int hodn = -666;
 		Srovnani_NUMB(&hodn);
-		_return(new Numb(hodn))
-		;
+		_return(new Numb(hodn));
 		break;
+	}
 
 	case LPAR: {
 		CtiSymb();

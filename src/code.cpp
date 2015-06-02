@@ -5,6 +5,8 @@
 #include "code.h"
 #include "debug.h"
 
+extern int g_optimize_level;
+
 int CodeLine::last_line_number = 0;
 
 extern TmSource *g_ts;
@@ -121,7 +123,9 @@ void TmSource::print(const char *file_name, bool printComments) {
 		f = stdout;
 	}
 
-	for (std::vector<int>::size_type i = 0; i != this->lines.size(); i++) {
+	bool skip = false;
+
+	for (std::vector<int>::size_type i = 0; i != this->lines.size(); ++i) {
 		/* std::cout << someVector[i]; ... */
 
 		static const char *instr_str[] = { "HALT", "IN", "OUT", "ADD", "INC",
@@ -152,13 +156,26 @@ void TmSource::print(const char *file_name, bool printComments) {
 			break;
 		case RM:
 		case RA:
-			if (printComments && this->lines[i]->comment_str != NULL) {
-				fprintf(f, "* %s\n", this->lines[i]->comment_str);
+			if (skip) {
+				skip = false;
+			} else if (0 && 0 < g_optimize_level && lines[i]->type == RM
+					&& this->lines[i]->instruction == ST
+					&& this->lines[i + 1]->instruction == LD
+					&& this->lines[i]->op[0] == this->lines[i + 1]->op[0]
+					&& this->lines[i]->op[1] == this->lines[i + 1]->op[1]
+					&& this->lines[i]->op[2] == this->lines[i + 1]->op[2]) {
+				skip = true;
+				fprintf(f, "* ST+LD of the same reg :D\n");
+			} else {
+				if (printComments && this->lines[i]->comment_str != NULL) {
+					fprintf(f, "* %s\n", this->lines[i]->comment_str);
+				}
+				fprintf(f, "%02d:%10s%10d,%d(%d)\n",
+						this->lines[i]->line_number,
+						instr_str[this->lines[i]->instruction],
+						this->lines[i]->op[0], this->lines[i]->op[1],
+						this->lines[i]->op[2]);
 			}
-			fprintf(f, "%02d:%10s%10d,%d(%d)\n", this->lines[i]->line_number,
-					instr_str[this->lines[i]->instruction],
-					this->lines[i]->op[0], this->lines[i]->op[1],
-					this->lines[i]->op[2]);
 			break;
 		default:
 			assert(0);

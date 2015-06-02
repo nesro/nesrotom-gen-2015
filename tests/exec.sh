@@ -11,7 +11,7 @@ if ! make; then
 fi
 
 #if ! ./bin/mila2tm ./tests/mila/${1}.mila -o /tmp/lel.tm; then
-if ! ./bin/mila2tm -d 10 -O 1 $1 -o /tmp/lel.tm; then
+if ! ./bin/mila2tm -d 10 -O $2 $1 -o /tmp/lel.tm; then
 	echo "$f ERROR compilation exited with an error" 2>&1
 	[[ $DEBUG ]] && set +xv
 	exit 1

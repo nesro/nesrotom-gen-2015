@@ -5,4 +5,5 @@ begin
 	k := (i + j) * (i + j);
 	write k;
 end
+{ (98+99)*(98+99) }
 

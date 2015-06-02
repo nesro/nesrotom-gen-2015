@@ -16,8 +16,16 @@ MKDIR_P=mkdir -p
 MAKE=make
 
 CLIBS=
+
+ifdef DEBUG
 CFLAGS=-Og -Wall -Wextra -Wformat-security -Wshadow -Wlogical-op -Wfloat-equal \
 -Werror -pedantic -ggdb -std=c++11
+else
+CFLAGS=-Ofast -Wall -Wextra -Wformat-security -Wshadow -Wlogical-op -Wfloat-equal \
+-Werror -pedantic -std=c++11
+endif
+	
+
 
 SOURCE_DIR=./src
 SRC=./src
