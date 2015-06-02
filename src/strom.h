@@ -1,20 +1,22 @@
 #ifndef _STROM_
 #define _STROM_
 
+#include <vector>
+
 #define _DO_YOU_WANT_ZASPOC_ 0
 
 enum Operator {
-	Plus, //
-	Minus, //
-	Times, //
-	Divide, //
-	Eq, //
-	NotEq, //
-	Less, //
-	Greater, //
-	LessOrEq, //
-	GreaterOrEq, //
-	Error, //
+	Plus = 0, //
+	Minus = 1, //
+	Times = 2, //
+	Divide = 3, //
+	Eq = 4, //
+	NotEq = 5, //
+	Less = 6, //
+	Greater = 7, //
+	LessOrEq = 8, //
+	GreaterOrEq = 9, //
+	Error = 10, //
 };
 
 class Node {
@@ -22,9 +24,10 @@ public:
 	virtual Node *Optimize() {
 		return this;
 	}
-	virtual void Translate() = 0;
+	virtual int Translate() = 0;
 	virtual ~Node() {
 	}
+	virtual void print() = 0;
 };
 
 class Expr: public Node {
@@ -38,25 +41,31 @@ public:
 	int addr;
 	bool rvalue;
 	Var(int, bool);
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class Numb: public Expr {
 public:
 	int value;
 	Numb(int);
-	virtual void Translate();
+	virtual int Translate();
 	int Value();
+	virtual void print();
 };
 
 class Bop: public Expr {
 public:
 	Operator op;
 	Expr *left, *right;
+	int tmp_var;
+	std::vector<Bop *> dup_childs;
+	Bop *dup_parent;
 	Bop(Operator, Expr*, Expr*);
 	virtual ~Bop();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class UnMinus: public Expr {
@@ -65,7 +74,8 @@ public:
 	UnMinus(Expr *e);
 	virtual ~UnMinus();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class Assign: public Statm {
@@ -75,7 +85,8 @@ public:
 	Assign(Var*, Expr*);
 	virtual ~Assign();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class Read: public Statm {
@@ -84,7 +95,8 @@ public:
 	Read(Var *);
 	virtual ~Read();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class Write: public Statm {
@@ -93,7 +105,8 @@ public:
 	Write(Expr*);
 	virtual ~Write();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class If: public Statm {
@@ -104,7 +117,8 @@ public:
 	If(Expr*, Statm*, Statm*);
 	virtual ~If();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class While: public Statm {
@@ -114,7 +128,8 @@ public:
 	While(Expr*, Statm*);
 	virtual ~While();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class StatmList: public Statm {
@@ -124,12 +139,16 @@ public:
 	StatmList(Statm*, StatmList*);
 	virtual ~StatmList();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 class Empty: public Statm {
-	virtual void Translate() {
+	virtual int Translate() {
+		_fn();
+		_return(0);
 	}
+	virtual void print();
 };
 
 class Prog: public Node {
@@ -138,7 +157,8 @@ public:
 	Prog(StatmList*);
 	virtual ~Prog();
 	virtual Node *Optimize();
-	virtual void Translate();
+	virtual int Translate();
+	virtual void print();
 };
 
 Expr *VarOrConst(char*);

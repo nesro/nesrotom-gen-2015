@@ -16,7 +16,7 @@ MKDIR_P=mkdir -p
 MAKE=make
 
 CLIBS=
-CFLAGS=-O2 -Wall -Wextra -Wformat-security -Wshadow -Wlogical-op -Wfloat-equal \
+CFLAGS=-Og -Wall -Wextra -Wformat-security -Wshadow -Wlogical-op -Wfloat-equal \
 -Werror -pedantic -ggdb -std=c++11
 
 SOURCE_DIR=./src

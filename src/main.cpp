@@ -11,6 +11,7 @@
 #include "code.h"
 
 /* global variables */
+Prog *g_prog = NULL;
 TmSource *g_ts = NULL;
 Storage *g_s = NULL;
 int g_debug_level = 0;
@@ -104,13 +105,18 @@ int main(int argc, char *argv[]) {
 
 	InitLexan(g_input);
 	CtiSymb();
-	Prog *prog = Program();
+	g_prog = Program();
+
+	printf("BEFORE OPTIMALIZATION:\n");
+	g_prog->print();
 
 	if (0 < g_optimize_level) {
-		prog = (Prog *) (prog->Optimize());
+		g_prog = (Prog *) (g_prog->Optimize());
+		printf("AFTER OPTIMALIZATION:\n");
+		g_prog->print();
 	}
 
-	prog->Translate();
+	g_prog->Translate();
 
 	g_ts->print(g_output, true);
 

@@ -21,9 +21,10 @@ for i in $(ls ./tests/mila); do
 	grep -v "//" ./tests/tm_comments/${f}.tnyc > ./tests/tm/${f}.tny
 
 	if [[ -f ./tests/in/${f}.in ]]; then
-		cat <(echo "g") ./tests/tm/${f}.tny <(echo "q") \
-			> ./tests/tm_vm/${f}.tny
-		res=$(cat ./tests/in/${f}.in | $tm ./tests/tm_vm/${f}.tny)
+		cat <(echo -e "t\np\ng") ./tests/in/${f}.in <(echo "q") \
+			> ./tests/in/${f}.in_c
+		res=$(cat ./tests/in/${f}.in_c | $tm ./tests/tm/${f}.tny \
+			1> ./tests/res/${f}_1.res 2> ./tests/res/${f}_2.res)
 	else
 		res=$(echo -e "t\np\ng\nq" | $tm ./tests/tm/${f}.tny \
 			1> ./tests/res/${f}_1.res 2> ./tests/res/${f}_2.res)
@@ -36,9 +37,9 @@ for i in $(ls ./tests/mila); do
 
 	if diff ./tests/out/${f}.out <(grep OUT: ./tests/res/${f}_1.res | \
 			awk '{ print $2 }'  ); then
-		echo "$f OK"
+		echo "\"$f\" OK"
 	else
-		echo "$f FAIL res=$res"
+		echo "\"$f\" FAIL (res=$res)"
 	fi
 done
 

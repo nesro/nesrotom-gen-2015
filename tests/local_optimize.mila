@@ -1,0 +1,8 @@
+var i, j, k;
+begin
+	i := 98;
+	j := 99;
+	k := (i + j) * (i + j);
+	write k;
+end
+

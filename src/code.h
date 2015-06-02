@@ -3,6 +3,7 @@
 
 #ifndef SRC_CODE_H_
 #define SRC_CODE_H_
+
 typedef enum type {
 	RR, //
 	RM, //

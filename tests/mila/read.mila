@@ -1,0 +1,16 @@
+var a;
+var b;
+var c;
+var d;
+var e;
+
+begin
+	read a; { 1 }
+	read b; { 2 }
+	read c; { 3 }
+	read d; { 4 }
+
+	e := (a * b) * (c * ((a * b) * d));
+
+	write e;
+end;

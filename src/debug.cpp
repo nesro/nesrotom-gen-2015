@@ -7,6 +7,7 @@ void print_debug_depth() {
 	for (int _debug_i = 0; _debug_i < _debug_depth; _debug_i++) {
 		(void) fprintf(stderr, "|----");
 	}
+	fflush(stderr);
 }
 
 void __fn_inner(const char *file, int line, const char *function) {
@@ -17,6 +18,7 @@ void __fn_inner(const char *file, int line, const char *function) {
 	_debug_depth++;
 	print_debug_depth();
 	(void) fprintf(stderr, "%s:%d | %s\n", file, line, function);
+	fflush(stderr);
 }
 
 void __return_inner(const char *file, int line, const char *function,
@@ -27,6 +29,7 @@ void __return_inner(const char *file, int line, const char *function,
 	print_debug_depth();
 	(void) fprintf(stderr, "%s:%d | %s - return(%s)\n", file, line, function,
 			ret);
+	fflush(stderr);
 	_debug_depth--;
 }
 
@@ -36,5 +39,6 @@ void __return_void_inner(const char *file, int line, const char *function) {
 	}
 	print_debug_depth();
 	(void) fprintf(stderr, "%s:%d | %s - return(void)\n", file, line, function);
+	fflush(stderr);
 	_debug_depth--;
 }
