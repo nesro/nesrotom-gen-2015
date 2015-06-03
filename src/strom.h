@@ -40,7 +40,10 @@ class Var: public Expr {
 public:
 	int addr;
 	bool rvalue;
-	Var(int, bool);
+	const char *name;
+//	int value;
+//	bool value_is_set;
+	Var(int, bool, const char *);
 	virtual int Translate();
 	virtual void print();
 };

@@ -4,12 +4,15 @@
 #include <map>
 #include <iostream>
 
+#include "string.h"
+
 #include "debug.h"
 #include "strom.h"
 #include "tabsym.h"
 
 #include "code.h"
 
+extern int g_optimize_level;
 extern TmSource *g_ts;
 extern Storage *g_s;
 
@@ -221,7 +224,7 @@ void replaceDups(std::vector<Bop *> &vb, Bop *a) {
 //			delete a->left;
 			a->left = NULL;
 			_debug("REPLACING %p\n", (void* )&(a->left));
-			a->left = new Var((vb[i])->tmp_var, true);
+			a->left = new Var((vb[i])->tmp_var, true, NULL);
 			_debug("NOW IT IS %p\n", (void* )&(a->left));
 			bl = true;
 //			vb.erase(vb.begin() + i);
@@ -230,7 +233,7 @@ void replaceDups(std::vector<Bop *> &vb, Bop *a) {
 //			delete a->right;
 			a->right = NULL;
 			_debug("REPLACING %p\n", (void* )&(a->right));
-			a->right = new Var((vb[i])->tmp_var, true);
+			a->right = new Var((vb[i])->tmp_var, true, NULL);
 			_debug("NOW IT IS %p\n", (void* )&(a->right));
 //			vb.erase(vb.begin() + i);
 			br = true;
@@ -242,8 +245,230 @@ void replaceDups(std::vector<Bop *> &vb, Bop *a) {
 	if (r && !br) {
 		replaceDups(vb, r);
 	}
-	_return_void;
+	_return_void
+;}
+
+Var::Var(int a, bool rv, const char *arg_name) {
+	_fn();
+	this->addr = a;
+	this->rvalue = rv;
+	this->name = arg_name;
+//	this->value = 0;
+//	this->value_is_set = false;
+	_return_void
+;}
+
+Numb::Numb(int v) {
+	_fn();
+	value = v;
+	_return_void
+;}
+
+int Numb::Value() {
+	_fn();
+	_return(value);
 }
+
+Bop::Bop(Operator o, Expr *l, Expr *r) {
+	_fn();
+	op = o;
+	if (0 < g_optimize_level) {
+		Numb *ln = dynamic_cast<Numb *>(l);
+		Numb *rn = dynamic_cast<Numb *>(r);
+		Var *lv = dynamic_cast<Var *>(l);
+		Var *rv = dynamic_cast<Var *>(r);
+		Bop *lb = dynamic_cast<Bop *>(l);
+		Bop *rb = dynamic_cast<Bop *>(r);
+		_debug("ln=%p, rn=%p, lv=%p, rv=%p, lb=%p, rb=%p\n", (void * )ln,
+				(void * )rn, (void * ) lv, (void * ) rb, (void * ) lb,
+				(void * ) rb);
+		if (o == Plus || o == Times) {
+			if (ln && rn) { /* two numbers */
+				left = l;
+				right = r;
+			} else if (ln && rv) { /* number and var A */
+				left = l;
+				right = r;
+			} else if (rn && lv) { /* number and var B */
+				left = r;
+				right = l;
+			} else if (lv && rv) { /* two vars */
+				_debug("two vars \"%d\" and \"%d\" here\n", lv->addr, rv->addr);
+//				if (0 < strcmp(lv->name, rv->name)) {
+				if (lv->addr < rv->addr) {
+					left = l;
+					right = r;
+				} else {
+					left = r;
+					right = l;
+				}
+			} else if (lb && rb) { /* two bops */
+				if (get_bop_depth(lb) < get_bop_depth(rb)) {
+					left = r;
+					right = l;
+				} else {
+					left = l;
+					right = r;
+				}
+			} else if (lb && rn) { /* bop and  number A */
+				left = l;
+				right = r;
+			} else if (ln && rb) { /* bop and  number B */
+				left = r;
+				right = l;
+			} else if (lb && rv) { /* bop and  var A */
+				left = l;
+				right = r;
+			} else if (lv && rb) { /* bop and  var B */
+				left = r;
+				right = l;
+			} else {
+				assert(0 && "i dont knot how to bop for + and *");
+				left = r;
+				right = l;
+			}
+		} else if (o == Greater) {
+			left = r;
+			right = l;
+			o = LessOrEq;
+		} else if (o == GreaterOrEq) {
+			left = r;
+			right = l;
+			o = Less;
+		} else {
+			left = l;
+			right = r;
+		}
+	} else {
+		left = l;
+		right = r;
+	}
+
+	dup_parent = NULL;
+	tmp_var = -1;
+	_return_void
+;}
+
+Bop::~Bop() {
+	_fn();
+	delete left;
+	delete right;
+	_return_void
+;}
+
+UnMinus::UnMinus(Expr * e) {
+	_fn();
+	expr = e;
+	_return_void
+;}
+
+UnMinus::~UnMinus() {
+	_fn();
+	delete expr;
+	_return_void
+;}
+
+Assign::Assign(Var * v, Expr * e) {
+	_fn();
+	var = v;
+	expr = e;
+	_return_void
+;}
+
+Assign::~Assign() {
+	_fn();
+	delete var;
+	delete expr;
+	_return_void
+;}
+
+Write::Write(Expr * e) {
+	_fn();
+	expr = e;
+	_return_void
+;}
+
+Write::~Write() {
+	_fn();
+	delete expr;
+	_return_void
+;}
+
+Read::Read(Var * v) {
+	_fn();
+	var = v;
+	_return_void
+;}
+
+Read::~Read() {
+	_fn();
+	delete var;
+	_return_void
+;}
+
+If::If(Expr * c, Statm * ts, Statm * es) {
+	_fn();
+	cond = c;
+	thenstm = ts;
+	elsestm = es;
+	_return_void
+;}
+
+If::~If() {
+	_fn();
+	delete cond;
+
+	if (thenstm) {
+		delete thenstm;
+	}
+
+	if (elsestm) {
+		delete elsestm;
+	}
+
+	_return_void
+;}
+
+While::While(Expr * c, Statm * b) {
+	_fn();
+	cond = c;
+	body = b;
+	_return_void
+;}
+
+While::~While() {
+	_fn();
+	delete body;
+	_return_void
+;}
+
+StatmList::StatmList(Statm * s, StatmList * n) {
+	_fn();
+	statm = s;
+	next = n;
+	_return_void
+;}
+
+StatmList::~StatmList() {
+	_fn();
+	delete statm;
+	delete next;
+	_return_void
+;}
+
+Prog::Prog(StatmList * s) {
+	_fn();
+	stm = s;
+	_return_void
+;}
+
+Prog::~Prog() {
+	_fn();
+	delete stm;
+	_return_void
+;}
+
+/****************************************************************** OPTIMIZE */
 
 Node * Assign::Optimize() {
 	_fn();
@@ -252,6 +477,17 @@ Node * Assign::Optimize() {
 
 //	int tmp_var_location = 50; /* FIXME TODO tohle se da vycist z tabsym ne? */
 	std::vector<Bop *> vb; /* vector of bops and its number (for tmp var) */
+
+	Numb *numb = dynamic_cast<Numb *>(this->expr);
+	if (numb) {
+		_debug("it's a numb %p with val %d. var=%p\n", (void* )numb,
+				numb->Value(), (void* )this->var);
+
+		nastav(this->var->addr, numb->value);
+//		this->var->value_is_set = true;
+//		this->var->value = numb->value;
+		_return(this);
+	}
 
 	Bop *bop = dynamic_cast<Bop *>(this->expr);
 	if (bop) {
@@ -269,7 +505,10 @@ Node * Assign::Optimize() {
 			_debug("bop parent addr=%p\n", (void * )*it);
 
 			/* create new tmp var and add it to the statm list */
-			Assign *tmp_var = new Assign(new Var((*it)->tmp_var, false), *it);
+			char buf[50];
+			snprintf(buf, 50, "tmp%d", (*it)->tmp_var);
+			Assign *tmp_var = new Assign(new Var((*it)->tmp_var, false, buf),
+					*it);
 			statm = new StatmList(tmp_var, statm);
 
 //			/* replace all bops with this tmp var */
@@ -305,170 +544,149 @@ Node * Assign::Optimize() {
 	_return(this);
 }
 
-Var::Var(int a, bool rv) {
-	_fn();
-	addr = a;
-	rvalue = rv;
-	_return_void;
-}
-
-Numb::Numb(int v) {
-	_fn();
-	value = v;
-	_return_void;
-}
-
-int Numb::Value() {
-	_fn();
-	_return(value);
-}
-
-Bop::Bop(Operator o, Expr *l, Expr *r) {
-	_fn();
-	op = o;
-	left = l;
-	right = r;
-	dup_parent = NULL;
-	tmp_var = -1;
-	_return_void;
-}
-
-Bop::~Bop() {
-	_fn();
-	delete left;
-	delete right;
-	_return_void;
-}
-
-UnMinus::UnMinus(Expr * e) {
-	_fn();
-	expr = e;
-	_return_void;
-}
-
-UnMinus::~UnMinus() {
-	_fn();
-	delete expr;
-	_return_void;
-}
-
-Assign::Assign(Var * v, Expr * e) {
-	_fn();
-	var = v;
-	expr = e;
-	_return_void;
-}
-
-Assign::~Assign() {
-	_fn();
-	delete var;
-	delete expr;
-	_return_void;
-}
-
-Write::Write(Expr * e) {
-	_fn();
-	expr = e;
-	_return_void;
-}
-
-Write::~Write() {
-	_fn();
-	delete expr;
-	_return_void;
-}
-
-Read::Read(Var * v) {
-	_fn();
-	var = v;
-	_return_void;
-}
-
-Read::~Read() {
-	_fn();
-	delete var;
-	_return_void;
-}
-
-If::If(Expr * c, Statm * ts, Statm * es) {
-	_fn();
-	cond = c;
-	thenstm = ts;
-	elsestm = es;
-	_return_void;
-}
-
-If::~If() {
-	_fn();
-	delete cond;
-
-	if (thenstm) {
-		delete thenstm;
-	}
-
-	if (elsestm) {
-		delete elsestm;
-	}
-
-	_return_void;
-}
-
-While::While(Expr * c, Statm * b) {
-	_fn();
-	cond = c;
-	body = b;
-	_return_void;
-}
-
-While::~While() {
-	_fn();
-	delete body;
-	_return_void;
-}
-
-StatmList::StatmList(Statm * s, StatmList * n) {
-	_fn();
-	statm = s;
-	next = n;
-	_return_void;
-}
-
-StatmList::~StatmList() {
-	_fn();
-	delete statm;
-	delete next;
-	_return_void;
-}
-
-Prog::Prog(StatmList * s) {
-	_fn();
-	stm = s;
-	_return_void;
-}
-
-Prog::~Prog() {
-	_fn();
-	delete stm;
-	_return_void;
-}
-
-/****************************************************************** OPTIMIZE */
-
 Node * Bop::Optimize() {
 	_fn();
 
+	_debug("left=%p, right=%p \n", (void* )left, (void* )right);
+
 	left = (Expr *) (left->Optimize());
 	right = (Expr *) (right->Optimize());
+
+	assert(left);
+	assert(right);
+
 	Numb *l = dynamic_cast<Numb *>(left);
 	Numb *r = dynamic_cast<Numb *>(right);
+	Var *lv = dynamic_cast<Var *>(left);
+	Var *rv = dynamic_cast<Var *>(right);
 
-	if (!l || !r) {
-		return this;
+	_debug("l=%p, r=%p lv=%p, rv=%p\n", (void* )l, (void* )r, (void* )lv,
+			(void* )rv);
+//	if (lv) {
+//		_debug("lv->value_is_set=%d\n", lv->value);
+//	}
+//	if (rv) {
+//		_debug("rv->value_is_set=%d\n", rv->value);
+//	}
+
+	bool leftval_set = false;
+	bool rightval_set = false;
+	int leftval = -666;
+	int rightval = -666;
+
+	if (l) {
+		leftval = l->Value();
+		leftval_set = true;
+	}
+	if (r) {
+		rightval = r->Value();
+		rightval_set = true;
+	}
+	if (lv && je_nastaveno(lv->addr)) {
+		leftval = vrat(lv->addr);
+		leftval_set = true;
+		_debug("left is var with value %d\n", leftval);
+	}
+	if (rv && je_nastaveno(rv->addr)) {
+		rightval = vrat(rv->addr);
+		rightval_set = true;
+		_debug("right is var with value %d\n", rightval);
+	}
+
+	/* multi by 0 is zero */
+	if (this->op == Times
+			&& ((rightval_set && rightval == 0) || (leftval_set && leftval == 0))) {
+		delete this;
+		_return(new Numb(0));
+	}
+
+	/* multi by 1 */
+	if (this->op == Times) {
+		if (rightval_set && rightval == 1) {
+			if (l) {
+				delete this;
+				_return(new Numb(l->Value()));
+			} else if (lv) {
+				if (je_nastaveno(lv->addr)) {
+					delete this;
+					_return(new Numb(vrat(lv->addr)));
+				} else {
+					delete this;
+//					_return(new Numb(l->Value()));
+//					_return(lv);
+					_return(new Var(lv->addr, false, NULL));
+				}
+			} else {
+				assert(0);
+			}
+		}
+		if (leftval_set && leftval == 1) {
+			if (r) {
+				delete this;
+				_return(new Numb(r->Value()));
+			} else if (rv) {
+				if (je_nastaveno(rv->addr)) {
+					delete this;
+					_return(new Numb(vrat(rv->addr)));
+				} else {
+					delete this;
+//					_return(new Numb(r->Value()));
+//					_return(rv);
+					_return(new Var(rv->addr, false, NULL));
+				}
+			} else {
+				assert(0);
+			}
+		}
+	}
+
+	/* plus / minus zero does nothin */
+	if (this->op == Plus || this->op == Minus) {
+		if (rightval_set && rightval == 0) {
+			if (l) {
+				delete this;
+				_return(new Numb(l->Value()));
+			} else if (lv) {
+				if (je_nastaveno(lv->addr)) {
+					delete this;
+					_return(new Numb(vrat(lv->addr)));
+				} else {
+					delete this;
+//					_return(new Numb(l->Value()));
+//					_return(lv);
+					_return(new Var(lv->addr, false, NULL));
+				}
+			} else {
+				assert(0);
+			}
+		}
+		if (leftval_set && leftval == 0) {
+			if (r) {
+				delete this;
+				_return(new Numb(r->Value()));
+			} else if (rv) {
+				if (je_nastaveno(rv->addr)) {
+					delete this;
+					_return(new Numb(vrat(rv->addr)));
+				} else {
+					delete this;
+//					_debug("op is %d and leftval is zero. returning right %d\n",
+//							this->op, r->Value());
+//					_return(new Numb(r->Value()));
+					_return(new Var(rv->addr, false, NULL));
+				}
+			} else {
+				assert(0);
+			}
+		}
+	}
+
+	if (!leftval_set || !rightval_set) {
+		_debug2("bop doesnt have values to evalute righnow\n");
+		_return(this);
 	}
 
 	int res;
-	int leftval = l->Value();
-	int rightval = r->Value();
 
 	switch (op) {
 	case Plus:
@@ -544,7 +762,7 @@ Node * Write::Optimize() {
 
 Node * Read::Optimize() {
 	_fn();
-//FIXME?
+	odnastav(this->var->addr);
 	_return(this);
 }
 
@@ -764,7 +982,7 @@ int If::Translate() {
 	if (elsestm) {
 		elsestm->Translate();
 	} else {
-		//
+//
 	}
 
 	_return(0);
@@ -818,7 +1036,7 @@ Expr *VarOrConst(char *id) {
 
 	switch (druh) {
 	case IdProm:
-		_return(new Var(v, true));
+		_return(new Var(v, true, id));
 		break;
 
 	case IdKonst:
@@ -839,14 +1057,14 @@ FILE *print_loc = stderr;
 void Var::print() {
 	_fn();
 	_debug("(var %d)\n", this->addr);
-	_return_void;
-}
+	_return_void
+;}
 
 void Numb::print() {
 	_fn();
 	_debug2("(numb)\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void Bop::print() {
 	_fn();
@@ -855,16 +1073,16 @@ void Bop::print() {
 	_debug("<op=%d>\n", this->op);
 	right->print();
 	_debug2("<BOP>\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void UnMinus::print() {
 	_fn();
 	_debug2("<UnMinus>\n");
 	expr->print();
 	_debug2("</UnMinus>\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void Assign::print() {
 	_fn();
@@ -876,22 +1094,22 @@ void Assign::print() {
 	expr->print();
 	_debug2("\t</expr>\n");
 	_debug2("</Assign>\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void Write::print() {
 	_fn();
 	_debug2("<write>\n");
 	expr->print();
 	_debug2("</write>\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void Read::print() {
 	_fn();
 	_debug2("<read>k\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void If::print() {
 	_fn();
@@ -905,8 +1123,8 @@ void If::print() {
 		elsestm->print();
 		_debug2("}\n");
 	}
-	_return_void;
-}
+	_return_void
+;}
 
 void While::print() {
 	_fn();
@@ -915,8 +1133,8 @@ void While::print() {
 	_debug2(") {\n");
 	body->print();
 	_debug2("}=While\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void StatmList::print() {
 	_fn();
@@ -929,19 +1147,19 @@ void StatmList::print() {
 		s = s->next;
 	} while (s);
 	_debug2("</StatmList>\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void Empty::print() {
 	_fn();
 	_debug2("<Empty>\n");
-	_return_void;
-}
+	_return_void
+;}
 
 void Prog::print() {
 	_fn();
 	_debug2("<Prog>\n");
 	stm->print();
-	_return_void;
-}
+	_return_void
+;}
 

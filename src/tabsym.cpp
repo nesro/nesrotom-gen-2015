@@ -15,6 +15,9 @@ struct PrvekTab {
 	int hodn;
 	PrvekTab *dalsi;
 	PrvekTab(char *i, DruhId d, int h, PrvekTab *n);
+
+	int value;
+	bool value_is_set;
 };
 
 PrvekTab::PrvekTab(char *i, DruhId d, int h, PrvekTab *n) {
@@ -26,6 +29,10 @@ PrvekTab::PrvekTab(char *i, DruhId d, int h, PrvekTab *n) {
 	hodn = h;
 	dalsi = n;
 	g_s->mem_top++;
+
+	value = 0;
+	value_is_set = false;
+
 	_return_void;
 }
 
@@ -48,6 +55,62 @@ PrvekTab *hledejId(char *id) {
 		}
 	}
 	_return(NULL);
+}
+
+void nastav(int adr, int val) {
+	_fn();
+	PrvekTab *p = TabSym;
+	while (p) {
+		if (adr == p->hodn) {
+			p->value = val;
+			p->value_is_set = true;
+			_return_void;
+		} else {
+			p = p->dalsi;
+		}
+	}
+	assert(0);
+	_return_void;
+}
+void odnastav(int adr) {
+	_fn();
+	PrvekTab *p = TabSym;
+	while (p) {
+		if (adr == p->hodn) {
+			p->value_is_set = false;
+			_return_void;
+		} else {
+			p = p->dalsi;
+		}
+	}
+	assert(0);
+	_return_void;
+}
+bool je_nastaveno(int adr) {
+	_fn();
+	PrvekTab *p = TabSym;
+	while (p) {
+		if (adr == p->hodn) {
+			_return(p->value_is_set);
+		} else {
+			p = p->dalsi;
+		}
+	}
+	assert(0);
+	_return(false);
+}
+int vrat(int adr) {
+	_fn();
+	PrvekTab *p = TabSym;
+	while (p) {
+		if (adr == p->hodn) {
+			_return(p->value);
+		} else {
+			p = p->dalsi;
+		}
+	}
+	assert(0);
+	_return(0);
 }
 
 void deklKonst(char *id, int val) {

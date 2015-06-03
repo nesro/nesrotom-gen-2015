@@ -7,15 +7,15 @@ tm=./interpreter/tm
 if ! make; then
 	echo "FATAL ERROR make exited with an error" 2>&1
 	[[ $DEBUG ]] && set +xv
-	return
+	exit 1
 fi
 
 for i in $(ls ./tests/mila); do
 	f=$(echo ${i%.*})
 
 	for O in 0 1; do
-		if ! ./bin/mila2tm ./tests/mila/$i -O $O \
-		    -o ./tests/tm_comments/${f}.tnyc; then
+		if ! valgrind ./bin/mila2tm ./tests/mila/$i -O $O \
+		    -o ./tests/tm_comments/${f}.tnyc 2>/dev/null; then
 			echo "$f ERROR compilation exited with an error" 2>&1
 			continue
 		fi
@@ -37,11 +37,14 @@ for i in $(ls ./tests/mila); do
 			continue
 		fi
 
+		steps=$(grep "Number of instructions executed" \
+			./tests/res/${f}_1.res)
+
 		if diff ./tests/out/${f}.out <(grep OUT: ./tests/res/${f}_1.res | \
 				awk '{ print $2 }'  ); then
-			echo "\"$f\" OK (-O=$O)"
+			echo "\"$f\" (-O=$O) ($steps) OK"
 		else
-			echo "\"$f\" FAIL (-O=$O) (res=$res)"
+			echo "\"$f\" (-O=$O) (res=$res) FAIL"
 		fi
 	done
 done

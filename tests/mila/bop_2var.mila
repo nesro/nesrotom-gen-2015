@@ -1,0 +1,7 @@
+var i, j, x;
+begin
+	i := 8;
+	j := 9;
+	x := i + j;
+	write x;
+end;

@@ -1,0 +1,22 @@
+var x, a, b, c;
+begin
+	a := 7;
+	b := 11;
+	c := 13;
+
+	x := (a + b) * (a + b);
+	write x;
+	x := (a + b) * (b + a);
+	write x;
+	x := (a + b) * (a + b + c);
+	write x;
+	x := (a + b) * (c + b + a);
+	write x;
+	x := (a + b) * ((a + b) + c);
+	write x;
+	x := (a + b) * (c + (b + a));
+	write x;
+	x := (a + b) * (a + (b + c));
+	write x;
+	x := (a + b) * ((c + b) + a);
+end

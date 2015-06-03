@@ -173,7 +173,7 @@ Statm *Prikaz() {
 
 	switch (Symb) {
 	case IDENT: {
-		Var *var = new Var(adrProm(Ident), false);
+		Var *var = new Var(adrProm(Ident), false, Ident);
 		CtiSymb();
 		Srovnani(ASSGN);
 		_return(new Assign(var, Vyraz()));
@@ -187,7 +187,7 @@ Statm *Prikaz() {
 
 	case kwREAD: {
 		CtiSymb();
-		Var *var = new Var(adrProm(Ident), false);
+		Var *var = new Var(adrProm(Ident), false, Ident);
 		CtiSymb();
 		_return(new Read(var));
 		break;

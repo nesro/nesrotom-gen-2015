@@ -29,7 +29,9 @@ void __return_void_inner(const char *file, int line, const char *function);
 } while(0)
 
 #define _return_void \
-	__return_void_inner(__FILE__, __LINE__,  __FUNCTION__)
+	__return_void_inner(__FILE__, __LINE__,  __FUNCTION__); \
+	return \
+
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"

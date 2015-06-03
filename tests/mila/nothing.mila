@@ -1,0 +1,7 @@
+var i, j, k;
+begin
+	i := 10;
+	j := 20;
+	k := i + j;
+	write k;
+end
