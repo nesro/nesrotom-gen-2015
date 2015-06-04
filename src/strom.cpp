@@ -858,6 +858,15 @@ bool contains_variable(Var *v, std::vector<Bop *> b) {
 /* return the tmp_vars. change bops in place */
 void gloval_optimize(StatmList *prev, StatmList *now, std::vector<Bop *> btd) {
 	_fn();
+
+	assert(now);
+
+	/* FIXME - if we don;t know the prev, bail it out (we could get wrong
+	 * results */
+	if (!prev) {
+		_return_void;
+	}
+
 	StatmList *statm = NULL;
 	std::vector<Bop *> vb;
 	for (auto b1 : btd) {
@@ -896,16 +905,26 @@ void gloval_optimize(StatmList *prev, StatmList *now, std::vector<Bop *> btd) {
 	_debug2("GO: </statm print>\n");
 
 	if (statm) {
-		_debug2("GO: creating: prev->next = new StatmList(statm, now); \n")
+		_debug2("GO: creating: prev->next = new StatmList(statm, now); (or now)\n")
 
-		_debug2("GO <print BEFORE prev->next>\n");
-		prev->next->print();
+		_debug("GO <print BEFORE prev->next (prev=%p)>\n", (void* )prev);
+		if (prev) {
+			prev->next->print();
+		}
 		_debug2("GO </print BEFORE prev->next>\n");
 
-		prev->next = new StatmList(statm, now);
+		if (prev) {
+			_debug2("GO tmp vars goes to prev->next\n");
+			prev->next = new StatmList(statm, now);
+		} else {
+			_debug2("GO tmp vars goes to now\n");
+			now = new StatmList(statm, now);
+		}
 
 		_debug2("GO <print AFTER prev->next>\n");
-		prev->next->print();
+		if (prev) {
+			prev->next->print();
+		}
 		_debug2("GO </print AFTER prev->next>\n");
 
 		_debug2("GO <print now>\n");

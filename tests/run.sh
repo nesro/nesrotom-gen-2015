@@ -37,6 +37,7 @@ for v in "" valgrind; do
 
 			if [[ ! -f ./tests/out/${f}.out ]]; then
 				echo "$f ERROR no .out file found" 2>&1
+				((fail++))
 				continue
 			fi
 

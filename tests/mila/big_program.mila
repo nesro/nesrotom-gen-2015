@@ -1,0 +1,24 @@
+var a, b, c, d;
+const x = 2;
+begin
+	write 0; {=0}
+	read a; {10}
+	read b; {20}
+	write a; {=10}
+	write b; {=20}
+	c := 10;
+	d := 10;
+	while a < 12 do begin
+		c := (a + c) * a;
+		d := b * (a + c);
+		write c;
+		write d;
+		if (c + d) > 50 then
+			write 123
+		else
+			write 321;
+		write 1;
+		d := d + 1;
+		a := a + 1;
+	end;
+end

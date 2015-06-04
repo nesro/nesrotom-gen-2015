@@ -1,0 +1,46 @@
+00:       LDC         0,84(0)
+01:        ST         0,0(6)
+02:       LDC         0,36(0)
+03:        ST         0,1(6)
+04:        LD         0,0(6)
+05:        LD         1,1(6)
+* op !=
+06:       SUB         0,1,0
+07:       JNE         0,2(7)
+08:       LDC         0,0(0)
+09:       LDA         7,1(7)
+10:       LDC         0,1(0)
+* jumpAfterWhileBodyCauseCondFalse
+11:       JEQ         0,30(6)
+* cond
+12:        LD         0,0(6)
+13:        LD         1,1(6)
+* op >
+14:       SUB         0,1,0
+15:       JLT         0,2(7)
+16:       LDC         0,0(0)
+17:       LDA         7,1(7)
+18:       LDC         0,1(0)
+* jumpAfterThen
+19:       JEQ         0,25(6)
+20:        LD         0,0(6)
+21:        LD         1,1(6)
+* op -
+22:       SUB         0,0,1
+23:        ST         0,0(6)
+* jumpAfterElse
+24:       LDA         7,29(6)
+25:        LD         0,1(6)
+26:        LD         1,0(6)
+* op -
+27:       SUB         0,0,1
+28:        ST         0,1(6)
+* jumpAtBeginnning of wthile
+29:       LDA         7,4(6)
+30:       LDC         0,84(0)
+31:       OUT         0,0,0
+32:       LDC         0,36(0)
+33:       OUT         0,0,0
+34:        LD         0,0(6)
+35:       OUT         0,0,0
+36:      HALT         0,0,0
