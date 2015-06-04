@@ -1,0 +1,13 @@
+var i,j,k;
+begin
+	j := 10;
+	i := 1;
+	while j >= 2 do
+		begin
+			i := i + 1;
+			j := j - 1;
+		end;
+	write j;
+	write i;
+end
+
