@@ -1,0 +1,17 @@
+var a, b;
+begin
+	read a;
+	write 666;
+	while a < 30 do begin
+		b := a / 2;
+		write 444;
+		if b = 0 then begin
+			a := a + 1;
+			write a;
+		end else begin
+			a := a + 3;
+			write a;
+		end;
+	end;
+	write 777;
+end

@@ -85,29 +85,29 @@ CodeLine::~CodeLine(void) {
 
 /*****************************************************************************/
 
-int TmSource::addComment(const char *comment) {
+CodeLine* TmSource::addComment(const char *comment) {
 	CodeLine *cl = new CodeLine(COMMENT, 0, 0, 0, comment);
 	this->lines.push_back(cl);
-	return cl->line_number;
+	return cl;
 }
 
-int TmSource::addBlank(void) {
+CodeLine* TmSource::addBlank(void) {
 	CodeLine *cl = new CodeLine(BLANK, 0, 0, 0, NULL);
 	this->lines.push_back(cl);
-	return cl->line_number;
+	return cl;
 }
 
-int TmSource::addInstr(instruction_t instr, int op0, int op1, int op2) {
+CodeLine* TmSource::addInstr(instruction_t instr, int op0, int op1, int op2) {
 	CodeLine *cl = new CodeLine(instr, op0, op1, op2, NULL);
 	this->lines.push_back(cl);
-	return cl->line_number;
+	return cl;
 }
 
-int TmSource::addInstr(instruction_t instr, int op0, int op1, int op2,
+CodeLine* TmSource::addInstr(instruction_t instr, int op0, int op1, int op2,
 		const char *comment) {
 	CodeLine *cl = new CodeLine(instr, op0, op1, op2, comment);
 	this->lines.push_back(cl);
-	return cl->line_number;
+	return cl;
 }
 
 void TmSource::print(const char *file_name, bool printComments) {

@@ -17,6 +17,7 @@ if ! ./bin/mila2tm -d $3 -O $2 $1 -o /tmp/lel.tm; then
 	exit 1
 fi
 cat /tmp/lel.tm
-echo -e "t\np\ng\nq" | $tm /tmp/lel.tm
+#echo -e "t\np\ng\nq" | $tm /tmp/lel.tm
+echo "$tm /tmp/lel.tm"
 
 

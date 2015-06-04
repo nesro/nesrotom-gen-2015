@@ -1,0 +1,106 @@
+var a, b;
+begin
+	read a; {a MUST be 10}
+
+{ PLUS }
+	b := a + 10;
+	write b; {= 20}
+
+{ MINUS }
+	b := a - 5;
+	write b; {= 5}
+
+{ TIMES }
+	b := a * 2;
+	write b; {= 20}
+
+{ DIVIDE }
+	b := a / 2;
+	write b; {= 5}
+
+{ LESS }
+	if a < 20 then
+		write 1
+	else
+		write 666;
+
+	if a < 5 then
+		write 666
+	else
+		write 2;
+
+	if a < 10 then
+		write 666
+	else
+		write 3;
+
+{ EQ }
+	if a = 10 then
+		write 4
+	else
+		write 666;
+
+	if a = 20 then
+		write 666
+	else
+		write 5;
+
+{ NOT EQ }
+	if a <> 20 then
+		write 6
+	else
+		write 666;
+
+	if a <> 10 then
+		write 666
+	else
+		write 7;
+
+{ GREATER }
+	if a > 5 then
+		write 8
+	else
+		write 666;
+
+	if a > 20 then
+		write 666
+	else
+		write 9;
+
+	if a > 10 then
+		write 666
+	else
+		write 10;
+
+{ LESS OR EQ }
+	if a <= 20 then
+		write 11
+	else
+		write 666;
+
+	if a <= 5 then
+		write 666
+	else
+		write 12;
+
+	if a <= 10 then
+		write 13
+	else
+		write 666;
+
+{ GREATER OR EQ }
+	if a >= 5 then
+		write 14
+	else
+		write 666;
+
+	if a >= 20 then
+		write 666
+	else
+		write 15;
+
+	if a >= 10 then
+		write 16
+	else
+		write 666;
+end

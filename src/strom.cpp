@@ -327,15 +327,16 @@ Bop::Bop(Operator o, Expr *l, Expr *r) {
 				left = r;
 				right = l;
 			}
-		} else if (o == Greater) {
-			left = r;
-			right = l;
-			o = LessOrEq;
-		} else if (o == GreaterOrEq) {
-			left = r;
-			right = l;
-			o = Less;
 		} else {
+			/* FIXME TODO if (o == Greater) {
+			 left = r;
+			 right = l;
+			 o = LessOrEq;
+			 } else if (o == GreaterOrEq) {
+			 left = r;
+			 right = l;
+			 o = Less;
+			 } else { */
 			left = l;
 			right = r;
 		}
@@ -881,8 +882,10 @@ int Bop::Translate() {
 		g_ts->addInstr(DIV, rb, rb, ra, "op /");
 		break;
 	case Less:
+		/* (ra)1 < (rb)2
+		 * 2 - 1 = 1 -> 1 > 0 -> YES */
 		g_ts->addInstr(SUB, rb, ra, rb, "op <");
-		g_ts->addInstr(JLT, rb, 2, Storage::pc);
+		g_ts->addInstr(JGT, rb, 2, Storage::pc);
 		g_ts->addInstr(LDC, rb, 0, rb);
 		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
 		g_ts->addInstr(LDC, rb, 1, rb);
@@ -903,21 +906,21 @@ int Bop::Translate() {
 		break;
 	case Greater:
 		g_ts->addInstr(SUB, rb, ra, rb, "op >");
-		g_ts->addInstr(JGT, rb, 2, Storage::pc);
+		g_ts->addInstr(JLT, rb, 2, Storage::pc);
 		g_ts->addInstr(LDC, rb, 0, rb);
 		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
 		g_ts->addInstr(LDC, rb, 1, rb);
 		break;
 	case LessOrEq:
 		g_ts->addInstr(SUB, rb, ra, rb, "op <=");
-		g_ts->addInstr(JLE, rb, 2, Storage::pc);
+		g_ts->addInstr(JGE, rb, 2, Storage::pc);
 		g_ts->addInstr(LDC, rb, 0, rb);
 		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
 		g_ts->addInstr(LDC, rb, 1, rb);
 		break;
 	case GreaterOrEq:
 		g_ts->addInstr(SUB, rb, ra, rb, "op >=");
-		g_ts->addInstr(JGE, rb, 2, Storage::pc);
+		g_ts->addInstr(JLE, rb, 2, Storage::pc);
 		g_ts->addInstr(LDC, rb, 0, rb);
 		g_ts->addInstr(LDA, Storage::pc, 1, Storage::pc);
 		g_ts->addInstr(LDC, rb, 1, rb);
@@ -968,37 +971,31 @@ int Read::Translate() {
 
 int If::Translate() {
 	_fn();
-
-	int a1 = 0;
-	int a2 = 0;
-
-	a1 = a2;
-	a2 = a1;
-
+	g_ts->addComment("cond");
 	cond->Translate();
-
+	CodeLine *jmpAfterThen = g_ts->addInstr(JEQ, g_s->pop(), -666,
+			Storage::zero, "jumpAfterThen");
 	thenstm->Translate();
-
+	jmpAfterThen->op[1] = CodeLine::last_line_number + 1;
 	if (elsestm) {
+		CodeLine *jmpAfterElse = g_ts->addInstr(LDA, Storage::pc, -666,
+				Storage::zero, "jumpAfterElse");
 		elsestm->Translate();
-	} else {
-//
+		jmpAfterElse->op[1] = CodeLine::last_line_number;
 	}
-
 	_return(0);
 }
 
 int While::Translate() {
 	_fn();
-	int a1 = 0;
-	int a2 = 0;
-
-	a1 = a2;
-	a2 = a1;
-
+	int firstOfCond = CodeLine::last_line_number;
 	cond->Translate();
+	CodeLine *jmpAfterBody = g_ts->addInstr(JEQ, g_s->pop(), -666,
+			Storage::zero, "jumpAfterWhileBodyCauseCondFalse");
 	body->Translate();
-
+	g_ts->addInstr(LDA, Storage::pc, firstOfCond, Storage::zero,
+			"jumpAtBeginnning of wthile");
+	jmpAfterBody->op[1] = CodeLine::last_line_number;
 	_return(0);
 }
 

@@ -1,0 +1,10 @@
+var a;
+begin
+	read a;
+	write 666;
+	while a < 10 do begin
+		 a := a + 1;
+		 write a;
+	end;
+	write 777;
+end

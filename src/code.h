@@ -61,10 +61,10 @@ class TmSource {
 public:
 	std::vector<CodeLine *> lines;
 
-	int addComment(const char *);
-	int addBlank(void);
-	int addInstr(instruction_t, int, int, int);
-	int addInstr(instruction_t, int, int, int, const char *);
+	CodeLine* addComment(const char *);
+	CodeLine* addBlank(void);
+	CodeLine* addInstr(instruction_t, int, int, int);
+	CodeLine* addInstr(instruction_t, int, int, int, const char *);
 
 	void print(const char *file_name, bool printComments);
 

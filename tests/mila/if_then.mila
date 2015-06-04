@@ -1,0 +1,8 @@
+var a;
+begin
+	read a;
+	write 666;
+	if a < 10 then
+		write 111;
+	write 777;
+end
