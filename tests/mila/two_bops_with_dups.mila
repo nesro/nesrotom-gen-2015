@@ -1,0 +1,10 @@
+var x, y, a, b, c;
+begin
+	read a; { 3 }
+	read b; { 5 }
+	read c; { 7 }
+	x := (a + b) * c; { (3 + 5) * 7 = 56 }
+	y := (a * (a + b)); { 3 * (3 + 5) = 24 }
+	write x; { 56 }
+	write y; { 24 }
+end

@@ -10,44 +10,52 @@ if ! make; then
 	exit 1
 fi
 
-for i in $(ls ./tests/mila); do
-	f=$(echo ${i%.*})
+let ok=0
+let fail=0
+for v in "" valgrind; do
+	echo "valgrind=\"$v\""
+	for i in $(ls ./tests/mila); do
+		f=$(echo ${i%.*})
+		for O in 0 1; do
+			if ! $v ./bin/mila2tm ./tests/mila/$i -O $O \
+			    -o ./tests/tm_comments/${f}.tnyc 2>/dev/null; then
+				echo "$f ERROR compilation exited with an error" 2>&1
+				continue
+			fi
 
-	for O in 0 1; do
-		if ! $1 ./bin/mila2tm ./tests/mila/$i -O $O \
-		    -o ./tests/tm_comments/${f}.tnyc 2>/dev/null; then
-			echo "$f ERROR compilation exited with an error" 2>&1
-			continue
-		fi
+			grep -v "//" ./tests/tm_comments/${f}.tnyc > ./tests/tm/${f}.tny
 
-		grep -v "//" ./tests/tm_comments/${f}.tnyc > ./tests/tm/${f}.tny
+			if [[ -f ./tests/in/${f}.in ]]; then
+				cat <(echo -e "t\np\ng") ./tests/in/${f}.in <(echo "q") \
+					> ./tests/in/${f}.in_c
+				res=$(cat ./tests/in/${f}.in_c | timeout 20 $tm ./tests/tm/${f}.tny \
+					1> ./tests/res/${f}_1.res 2> ./tests/res/${f}_2.res)
+			else
+				res=$(echo -e "t\np\ng\nq" | timeout 20 $tm ./tests/tm/${f}.tny \
+					1> ./tests/res/${f}_1.res 2> ./tests/res/${f}_2.res)
+			fi
 
-		if [[ -f ./tests/in/${f}.in ]]; then
-			cat <(echo -e "t\np\ng") ./tests/in/${f}.in <(echo "q") \
-				> ./tests/in/${f}.in_c
-			res=$(cat ./tests/in/${f}.in_c | timeout 20 $tm ./tests/tm/${f}.tny \
-				1> ./tests/res/${f}_1.res 2> ./tests/res/${f}_2.res)
-		else
-			res=$(echo -e "t\np\ng\nq" | timeout 20 $tm ./tests/tm/${f}.tny \
-				1> ./tests/res/${f}_1.res 2> ./tests/res/${f}_2.res)
-		fi
+			if [[ ! -f ./tests/out/${f}.out ]]; then
+				echo "$f ERROR no .out file found" 2>&1
+				continue
+			fi
 
-		if [[ ! -f ./tests/out/${f}.out ]]; then
-			echo "$f ERROR no .out file found" 2>&1
-			continue
-		fi
+			steps=$(grep "Number of instructions executed" \
+				./tests/res/${f}_1.res)
 
-		steps=$(grep "Number of instructions executed" \
-			./tests/res/${f}_1.res)
-
-		if diff ./tests/out/${f}.out <(grep OUT: ./tests/res/${f}_1.res | \
-				awk '{ print $2 }' ); then
-			echo "\"$f\" (-O=$O) ($steps) OK"
-		else
-			echo "\"$f\" (-O=$O) (res=$res) FAIL"
-		fi
+			if diff ./tests/out/${f}.out <(grep OUT: ./tests/res/${f}_1.res | \
+					awk '{ print $2 }' ); then
+				echo "\"$f\" (-O=$O) ($steps) OK"
+				((ok++))
+			else
+				echo "\"$f\" (-O=$O) (res=$res) FAIL"
+				((fail++))
+			fi
+		done
 	done
 done
+
+echo "oks=$ok fails=$fail"
 
 [[ $DEBUG ]] && set +xv
 
