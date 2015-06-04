@@ -1,0 +1,12 @@
+var a,b,c,x,y;
+begin
+	read a; {3}
+	read b; {5}
+	read c; {7}
+	x := (a + b) * c; {56}
+	y := (a * (a + b)); {24}
+	a := x + (a + b); {64}
+	write x;
+	write y;
+	write a;
+end

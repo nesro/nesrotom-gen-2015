@@ -101,13 +101,30 @@ bool cmp_bop(Bop *l, Bop *r) {
 bool find_subtree_in_bop(std::vector<Bop *> &vb, Bop *haystack, Bop *needle) {
 	_fn();
 
-	static int tmp_var_pool = 50; /* TODO FIXME tohle by chtelo nejak vypocitat */
+	static int tmp_var_pool = 100; /* TODO FIXME tohle by chtelo nejak vypocitat */
+	static std::vector<Bop *> seen;
 
 	_debug("haystack %p op=%d, needle %p op=%d\n", (void* )haystack,
 			haystack->op, (void * )needle, needle->op);
 
 	if (haystack != needle && needle->dup_parent != haystack
 			&& haystack->dup_parent != needle && cmp_bop(needle, haystack)) {
+
+		/* neni uz tady nahodou? */
+		for (auto b : seen) {
+			if (cmp_bop(needle, b)) {
+//				assert(0 && "cmp_bop(needle, b)");
+				_return(false);
+			}
+			if (cmp_bop(haystack, b)) {
+//				assert(0 && "cmp_bop(haystack, b)");
+				_return(false);
+			}
+			if (needle == b) {
+//				assert(0 && "needle == b");
+				_return(false);
+			}
+		}
 
 		Bop *orig = needle;
 		while (orig->dup_parent && orig->dup_parent != orig) {
@@ -118,8 +135,13 @@ bool find_subtree_in_bop(std::vector<Bop *> &vb, Bop *haystack, Bop *needle) {
 		if (!needle->dup_parent) {
 			_debug("VBPUSH needle %p\n", (void * )needle);
 			vb.push_back(needle);
+			seen.push_back(needle);
 			needle->dup_parent = needle; /* FIXME je sam sobe parentem */
 			needle->tmp_var = tmp_var_pool++;
+			_debug(
+					"FSIB: needle->tmp_var =%d, needleop=%d," "left=%p, right=%p\n",
+					needle->tmp_var, needle->op, (void* )needle->left,
+					(void* )needle->right);
 		}
 		_debug("ORIGPUSH haystack %p\n", (void * )haystack);
 		orig->dup_childs.push_back(haystack);
@@ -864,8 +886,8 @@ void gloval_optimize(StatmList *prev, StatmList *now, std::vector<Bop *> btd) {
 	/* FIXME - if we don;t know the prev, bail it out (we could get wrong
 	 * results */
 	if (!prev) {
-		_return_void;
-	}
+		_return_void
+;	}
 
 	StatmList *statm = NULL;
 	std::vector<Bop *> vb;
@@ -905,7 +927,8 @@ void gloval_optimize(StatmList *prev, StatmList *now, std::vector<Bop *> btd) {
 	_debug2("GO: </statm print>\n");
 
 	if (statm) {
-		_debug2("GO: creating: prev->next = new StatmList(statm, now); (or now)\n")
+		_debug2(
+				"GO: creating: prev->next = new StatmList(statm, now); (or now)\n")
 
 		_debug("GO <print BEFORE prev->next (prev=%p)>\n", (void* )prev);
 		if (prev) {
@@ -1335,6 +1358,7 @@ void Assign::print() {
 void Write::print() {
 	_fn();
 	_debug2("<write>\n");
+	assert(expr);
 	expr->print();
 	_debug2("</write>\n");
 	_return_void
