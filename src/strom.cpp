@@ -16,6 +16,8 @@ extern int g_optimize_level;
 extern TmSource *g_ts;
 extern Storage *g_s;
 
+bool g_ImInWhile = false;
+
 /******************************************************************************/
 /* TODO FIXME */
 /* TODO FIXME */
@@ -558,8 +560,16 @@ Node * Bop::Optimize() {
 
 	Numb *l = dynamic_cast<Numb *>(left);
 	Numb *r = dynamic_cast<Numb *>(right);
-	Var *lv = dynamic_cast<Var *>(left);
-	Var *rv = dynamic_cast<Var *>(right);
+
+	Var *lv;
+	Var *rv;
+	if (!g_ImInWhile) {
+		lv = dynamic_cast<Var *>(left);
+		rv = dynamic_cast<Var *>(right);
+	} else {
+		lv = NULL;
+		rv = NULL;
+	}
 
 	_debug("l=%p, r=%p lv=%p, rv=%p\n", (void* )l, (void* )r, (void* )lv,
 			(void* )rv);
@@ -798,10 +808,11 @@ Node * If::Optimize() {
 
 Node * While::Optimize() {
 	_fn();
+	g_ImInWhile = true;
 	cond = (Expr *) (cond->Optimize());
 	body = (Statm *) (body->Optimize());
 	Numb *c = dynamic_cast<Numb *>(cond);
-
+	g_ImInWhile = false;
 	if (!c) {
 		_return(this);
 	}
@@ -814,17 +825,149 @@ Node * While::Optimize() {
 	_return(this);
 }
 
+bool bop_contains_var(Var *v, Bop *b) {
+	_fn();
+	Var *lv = dynamic_cast<Var *>(b->left);
+	Var *rv = dynamic_cast<Var *>(b->right);
+	Bop *lb = dynamic_cast<Bop *>(b->left);
+	Bop *rb = dynamic_cast<Bop *>(b->right);
+	if (lv && lv->addr == v->addr) {
+		_return(true);
+	}
+	if (rv && rv->addr == v->addr) {
+		_return(true);
+	}
+	if (lb && bop_contains_var(v, lb)) {
+		_return(true);
+	}
+	if (rb && bop_contains_var(v, rb)) {
+		_return(true);
+	}
+	_return(false);
+}
+bool contains_variable(Var *v, std::vector<Bop *> b) {
+	_fn();
+	for (auto bop : b) {
+		if (bop_contains_var(v, bop)) {
+			_return(true);
+		}
+	}
+	_return(false);
+}
+
+StatmList* gloval_optimize(Statm *st, std::vector<Bop *> btd) {
+	_fn();
+	StatmList *statm = new StatmList(st, NULL);
+	std::vector<Bop *> vb;
+	for (auto b1 : btd) {
+		for (auto b2 : btd) {
+			local_optimize(vb, b1, b2);
+		}
+	}
+	for (std::vector<Bop *>::iterator it = vb.begin(); it != vb.end(); ++it) {
+		_debug("GO: bop parent addr=%p\n", (void * )*it);
+		char buf[50];
+		snprintf(buf, 50, "tmp%d", (*it)->tmp_var);
+		Assign *tmp_var = new Assign(new Var((*it)->tmp_var, false, buf), *it);
+		statm = new StatmList(tmp_var, statm);
+	}
+
+	_debug2("GO: <bops to dedup>\n");
+	for (auto b : vb) {
+		_debug("GO: bop to dedup: %p\n", (void* )b);
+	}
+	_debug2("GO: </bops to dedup>\n");
+
+	for (auto b1 : btd) {
+		_debug("GO: replacing dups of %p\n", (void* )b1);
+//		replaceDups(vb, b1);
+	}
+
+	btd.clear();
+//	assert(0 && "yes");
+
+	_return(statm);
+}
+
 Node * StatmList::Optimize() {
 	_fn();
-	StatmList *s = this;
+	StatmList *sl = this;
 
-	do {
-		s->statm = (Statm *) (s->statm->Optimize());
-		s = s->next;
-	} while (s);
+	if (1) {
+		do {
+			sl->statm = (Statm *) (sl->statm->Optimize());
+			sl = sl->next;
+		} while (sl);
+	} else {
+		_debug2("STATM OPTIMIZE ===========================================\n");
+		StatmList *sl_prev = NULL;
+		std::vector<Bop *> btd; /* bops to dedup */
+		do {
 
+			StatmList *thisSl = sl;
+
+			_debug2("<optmize statm>\n");
+			sl->statm = (Statm *) (sl->statm->Optimize());
+			_debug2("</optmize statm>\n");
+
+			/* dalsi je statmlist */
+			StatmList *sll = dynamic_cast<StatmList *>(sl->statm);
+			if (sll) {
+				_debug("STATM OPTIMIZE: this statm is a StatmList. next=%p\n",
+						(void * )sll->next);
+				if (!sll->next) {
+					_debug2("it has only 1 statm, replacing\n");
+					thisSl = sll;
+				}
+			}
+
+			Read *r = dynamic_cast<Read *>(thisSl->statm);
+			if (r) {
+				_debug2("STATM OPTIMIZE: this statm is a read\n");
+			}
+
+			Assign *a = dynamic_cast<Assign *>(thisSl->statm);
+			Bop *ab = NULL;
+			if (a) {
+				_debug2("STATM OPTIMIZE: this statm is an assign\n");
+				ab = dynamic_cast<Bop *>(a->expr);
+			}
+			if (a) {
+				if (contains_variable(a->var, btd) && sl_prev && !btd.empty()) {
+					_debug2("STATM OPTIMIZE GLOBAL OPTIMIZE BECAUSE CV\n");
+					sl_prev->next = gloval_optimize(sl, btd);
+				} else {
+					if (ab) {
+						_debug2("SLO: adding ab to btd\n");
+						btd.push_back(ab);
+					}
+				}
+			} else {
+				if (sl_prev && !btd.empty()) {
+					_debug2("STATM OPTIMIZE GLOBAL OPTIMIZE NOT ASSIGN\n");
+					sl_prev->next = gloval_optimize(sl, btd);
+				}
+			}
+			sl_prev = sl;
+			sl = sl->next;
+		} while (sl);
+		if (sl_prev && !btd.empty()) {
+			_debug2("STATM OPTIMIZE GLOBAL OPTIMIZE BECAUSE END OF STATML\n");
+			sl_prev->next = gloval_optimize(sl, btd);
+		}
+	}
+
+	_debug2("<SLO: <print>");
+	this->print();
+	_debug2("<SLO: </print>");
+//	assert(0);
 	_return(this);
 }
+
+//			Read *r = dynamic_cast<Read *>(s->statm);
+//			Write *wr = dynamic_cast<Write *>(s->statm);
+//			If *i = dynamic_cast<If *>(s->statm);
+//			If *wh = dynamic_cast<While *>(s->statm);
 
 Node * Prog::Optimize() {
 	_fn();
@@ -986,6 +1129,21 @@ int If::Translate() {
 	_return(0);
 }
 
+/* TODO FIXME
+ *
+ var i,j,k;
+ begin
+ j := 10;
+ i := 1;
+ while j >= 0 do
+ begin
+ i := i + 1;
+ j := j - 1;
+ end;
+ write i;
+ end
+ *
+ * */
 int While::Translate() {
 	_fn();
 	int firstOfCond = CodeLine::last_line_number;
