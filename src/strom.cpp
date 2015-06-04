@@ -855,9 +855,10 @@ bool contains_variable(Var *v, std::vector<Bop *> b) {
 	_return(false);
 }
 
-StatmList* gloval_optimize(Statm *st, std::vector<Bop *> btd) {
+/* return the tmp_vars. change bops in place */
+void gloval_optimize(StatmList *prev, StatmList *now, std::vector<Bop *> btd) {
 	_fn();
-	StatmList *statm = new StatmList(st, NULL);
+	StatmList *statm = NULL;
 	std::vector<Bop *> vb;
 	for (auto b1 : btd) {
 		for (auto b2 : btd) {
@@ -880,20 +881,53 @@ StatmList* gloval_optimize(Statm *st, std::vector<Bop *> btd) {
 
 	for (auto b1 : btd) {
 		_debug("GO: replacing dups of %p\n", (void* )b1);
-//		replaceDups(vb, b1);
+		replaceDups(vb, b1);
+	}
+
+//	assert(0 && "yes");
+
+	_debug2("GO: creating tmp vars\n");
+	_debug2("GO: <statm print>\n");
+	if (statm) {
+		statm->print();
+	} else {
+		_debug2("GO: statm is NULL\n");
+	}
+	_debug2("GO: </statm print>\n");
+
+	if (statm) {
+		_debug2("GO: creating: prev->next = new StatmList(statm, now); \n")
+
+		_debug2("GO <print BEFORE prev->next>\n");
+		prev->next->print();
+		_debug2("GO </print BEFORE prev->next>\n");
+
+		prev->next = new StatmList(statm, now);
+
+		_debug2("GO <print AFTER prev->next>\n");
+		prev->next->print();
+		_debug2("GO </print AFTER prev->next>\n");
+
+		_debug2("GO <print now>\n");
+		now->print();
+		_debug2("GO </print now>\n");
+
+	} else {
+		_debug2("GO: statm is null, nothing to do\n")
 	}
 
 	btd.clear();
-//	assert(0 && "yes");
 
-	_return(statm);
+//	assert(0&&"GO END");
+
+	_return_void
+;	//	_return(statm);
 }
 
 Node * StatmList::Optimize() {
 	_fn();
 	StatmList *sl = this;
-
-	if (1) {
+	if (0) {
 		do {
 			sl->statm = (Statm *) (sl->statm->Optimize());
 			sl = sl->next;
@@ -901,6 +935,8 @@ Node * StatmList::Optimize() {
 	} else {
 		_debug2("STATM OPTIMIZE ===========================================\n");
 		StatmList *sl_prev = NULL;
+		StatmList *tmpVarsHerePrev = NULL;
+		StatmList *tmpVarsHere = NULL;
 		std::vector<Bop *> btd; /* bops to dedup */
 		do {
 
@@ -935,17 +971,26 @@ Node * StatmList::Optimize() {
 			if (a) {
 				if (contains_variable(a->var, btd) && sl_prev && !btd.empty()) {
 					_debug2("STATM OPTIMIZE GLOBAL OPTIMIZE BECAUSE CV\n");
-					sl_prev->next = gloval_optimize(sl, btd);
+					gloval_optimize(tmpVarsHerePrev, tmpVarsHere, btd);
 				} else {
 					if (ab) {
 						_debug2("SLO: adding ab to btd\n");
+
+						/* pokud je to prvni bop co tam davame, tmp vars
+						 * prijdou pred nej */
+						if (btd.empty()) {
+							_debug2("SLO: BTD is empty, setting up tVHP, tVH\n");
+							tmpVarsHerePrev = sl_prev;
+							tmpVarsHere = sl;
+						}
+
 						btd.push_back(ab);
 					}
 				}
 			} else {
 				if (sl_prev && !btd.empty()) {
 					_debug2("STATM OPTIMIZE GLOBAL OPTIMIZE NOT ASSIGN\n");
-					sl_prev->next = gloval_optimize(sl, btd);
+					gloval_optimize(tmpVarsHerePrev, tmpVarsHere, btd);
 				}
 			}
 			sl_prev = sl;
@@ -953,14 +998,30 @@ Node * StatmList::Optimize() {
 		} while (sl);
 		if (sl_prev && !btd.empty()) {
 			_debug2("STATM OPTIMIZE GLOBAL OPTIMIZE BECAUSE END OF STATML\n");
-			sl_prev->next = gloval_optimize(sl, btd);
+			gloval_optimize(tmpVarsHerePrev, tmpVarsHere, btd);
 		}
+//
+//		if (tmpVars) {
+//			_debug2("tmpVars are not NULL!\n");
+//
+//			_debug2("<SLO: <tmpVars print>\n");
+//			tmpVars->print();
+//			_debug2("<SLO: </tmpVars print>\n");
+//
+//			_debug2("<SLO: <this print>\n");
+//			this->print();
+//			_debug2("<SLO: </this print>\n");
+//
+//			assert(0 && "tmpvars");
+//			_return(new StatmList(tmpVars, this));
+//		}
+
 	}
 
 	_debug2("<SLO: <print>");
 	this->print();
 	_debug2("<SLO: </print>");
-//	assert(0);
+//	assert(0 && "end of SLO");
 	_return(this);
 }
 
@@ -1262,7 +1323,7 @@ void Write::print() {
 
 void Read::print() {
 	_fn();
-	_debug2("<read>k\n");
+	_debug2("<read>\n");
 	_return_void
 ;}
 
