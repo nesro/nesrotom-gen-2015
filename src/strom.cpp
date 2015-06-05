@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <algorithm>
 
 #include "string.h"
 
@@ -279,6 +280,7 @@ Var::Var(int a, bool rv, const char *arg_name) {
 	this->name = arg_name;
 //	this->value = 0;
 //	this->value_is_set = false;
+	this->usedEver = false;
 	_return_void
 ;}
 
@@ -583,6 +585,17 @@ Node * Bop::Optimize() {
 	Numb *l = dynamic_cast<Numb *>(left);
 	Numb *r = dynamic_cast<Numb *>(right);
 
+//	Var *usedLv = dynamic_cast<Var *>(left);
+//	Var *usedRv = dynamic_cast<Var *>(right);
+//	if (usedLv) {
+//		_debug("666 Bop::Optimize(): varL %d has been used in bop\n", usedLv->addr);
+//		usedLv->usedEver = true;
+//	}
+//	if (usedRv) {
+//		_debug("666 Bop::Optimize(): varR %d has been used in bop\n", usedRv->addr);
+//		usedRv->usedEver = true;
+//	}
+
 	Var *lv;
 	Var *rv;
 	if (!g_ImInWhile) {
@@ -787,9 +800,19 @@ Node * UnMinus::Optimize() {
 	_return(e);
 }
 
+std::vector<int> g_used_vars;
 Node * Write::Optimize() {
 	_fn();
 	expr = (Expr *) (expr->Optimize());
+
+	Var *usedLv = dynamic_cast<Var *>(this->expr);
+	_debug("666 Write::Optimize(), usedLv=%p\n", (void* )usedLv);
+	if (usedLv) {
+		_debug("666 Write::Optimize(): write used variable %d\n", usedLv->addr);
+		usedLv->usedEver = true;
+		g_used_vars.push_back(usedLv->addr);
+	}
+
 	_return(this);
 }
 
@@ -1192,6 +1215,15 @@ int UnMinus::Translate() {
 
 int Assign::Translate() {
 	_fn();
+
+	// || this->var->usedEver
+	if (!(std::find(g_used_vars.begin(), g_used_vars.end(), this->var->addr)
+			!= g_used_vars.end())) {
+		_debug("666 Assign::Translate(): var %d has never been used\n",
+				this->var->addr);
+		g_ts->addComment("tady mela byt promenna\n");
+		_return(0);
+	}
 
 	expr->Translate(); // pushes result on top of the stack
 	g_ts->addInstr(ST, g_s->top(), var->addr, Storage::zero);

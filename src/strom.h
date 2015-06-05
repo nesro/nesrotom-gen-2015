@@ -46,6 +46,7 @@ public:
 	Var(int, bool, const char *);
 	virtual int Translate();
 	virtual void print();
+	bool usedEver;
 };
 
 class Numb: public Expr {
