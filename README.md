@@ -1,4 +1,5 @@
-===warning: this code is really ultraterrible and nobody should EVER try to read it.===
+Warning: this code is really ultraterrible and nobody should EVER try to read it.
+=================================================================================
 
 ----------------
 
