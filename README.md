@@ -1,3 +1,7 @@
+===warning: this code is really ultraterrible and nobody should EVER try to read it.===
+
+----------------
+
 nesrotom-gen-2015
 
 - YES - Překladač vytváří korektní cílový kód z pohledu funkčnosti a používá optimalizaci výpočtu numerických konstantních výrazu (constant folding) (pozn. tato optimalizace je již implementována v dodaném front endu jazyka Mila) - max 10 b.
