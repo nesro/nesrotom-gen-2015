@@ -819,6 +819,10 @@ Node * Write::Optimize() {
 Node * Read::Optimize() {
 	_fn();
 	odnastav(this->var->addr);
+
+	this->var->usedEver = true;
+	g_used_vars.push_back(this->var->addr);
+
 	_return(this);
 }
 
@@ -851,9 +855,11 @@ Node * If::Optimize() {
 	_return(res);
 }
 
+bool whileEver = false;
 Node * While::Optimize() {
 	_fn();
 	g_ImInWhile = true;
+	whileEver = true;
 	cond = (Expr *) (cond->Optimize());
 	body = (Statm *) (body->Optimize());
 	Numb *c = dynamic_cast<Numb *>(cond);
@@ -1217,9 +1223,11 @@ int Assign::Translate() {
 	_fn();
 
 	// || this->var->usedEver
-	if (!(std::find(g_used_vars.begin(), g_used_vars.end(), this->var->addr)
-			!= g_used_vars.end())) {
-		_debug("666 Assign::Translate(): var %d has never been used\n",
+	if (!whileEver && g_optimize_level
+			&& !(std::find(g_used_vars.begin(), g_used_vars.end(),
+					this->var->addr) != g_used_vars.end())
+			&& this->var->addr < 100) {
+		_debug("6666 Assign::Translate(): var %d has never been used\n",
 				this->var->addr);
 		g_ts->addComment("tady mela byt promenna\n");
 		_return(0);

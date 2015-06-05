@@ -1,9 +1,9 @@
-00:       LDC         0,10(0)
-01:        ST         0,0(6)
-02:       LDC         0,20(0)
-03:        ST         0,1(6)
-04:       LDC         0,30(0)
-05:        ST         0,2(6)
-06:        LD         0,2(6)
-07:       OUT         0,0,0
-08:      HALT         0,0,0
+* tady mela byt promenna
+
+* tady mela byt promenna
+
+00:       LDC         0,30(0)
+01:        ST         0,2(6)
+02:        LD         0,2(6)
+03:       OUT         0,0,0
+04:      HALT         0,0,0
